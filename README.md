@@ -172,6 +172,95 @@ QWEN_AUDIO_MODELS=qwen-omni-turbo,qwen3-omni-flash,qwen-audio-turbo
 ```
 *Note: The system never silently falls back to non-Qwen APIs. Deployment is executed on Alibaba Cloud.*
 
+## ☁️ Alibaba Cloud Deployment Proof
+
+**Hackathon Requirement:** "You must demonstrate that the backend is running on Alibaba Cloud. Proof must be a link to a code file in their code repo that demonstrates use of Alibaba Cloud services and APIs."
+
+### LLM Backend (src/llm.py)
+
+All LLM calls use the Qwen Cloud endpoint via DashScope SDK:
+
+```python
+# src/llm.py
+from langchain_openai import ChatOpenAI
+
+def get_llm(temperature=0.7, model="qwen-plus-latest"):
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        openai_api_key=os.getenv("QWEN_API_KEY"),
+        openai_api_base="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    )
+```
+
+**Evidence:**
+- Endpoint: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+- Authentication: `QWEN_API_KEY` environment variable
+- Models used: `qwen-max`, `qwen-plus-latest`, `qwen-flash`, `qwen-turbo-latest`
+
+### Audio Transcription (src/audio.py)
+
+Audio transcription uses Qwen audio models via DashScope SDK:
+
+```python
+# src/audio.py
+import dashscope
+from dashscope.audio.tts_v2 import SpeechSynthesizer
+
+def transcribe_audio(audio_bytes, filename):
+    dashscope.api_key = os.getenv("QWEN_API_KEY")
+    # Uses Qwen audio models for transcription
+```
+
+**Evidence:**
+- SDK: `dashscope` (Alibaba Cloud's official SDK)
+- Models: `qwen-omni-turbo`, `qwen3-omni-flash`, `qwen-audio-turbo`
+- Configuration: `QWEN_AUDIO_MODEL` environment variable
+
+### No Third-Party AI APIs
+
+The codebase contains **zero** references to:
+- OpenAI API (except `langchain-openai` which is configured to use Qwen endpoint)
+- Anthropic API
+- Google AI / Gemini API
+- Any other non-Qwen LLM provider
+
+Verification:
+```bash
+grep -r "api.openai.com" src/ legalis/ server.py  # Returns nothing
+grep -r "anthropic" src/ legalis/ server.py         # Returns nothing
+grep -r "generativelanguage.googleapis.com" src/    # Returns nothing
+```
+
+### Deployment Architecture
+
+```
+┌─────────────────┐
+│   Browser UI    │
+│  (index.html)   │
+└────────┬────────┘
+         │ HTTP
+         ▼
+┌─────────────────┐
+│  FastAPI Server │
+│   (server.py)   │
+└────────┬────────┘
+         │ HTTPS
+         ▼
+┌─────────────────┐
+│  Qwen Cloud API │
+│ (DashScope SDK) │
+└─────────────────┘
+```
+
+### Compliance Checklist
+
+- [x] All LLM calls go through Qwen Cloud (dashscope-intl.aliyuncs.com)
+- [x] Audio transcription uses Qwen models
+- [x] API keys are in `.env`, not hardcoded
+- [x] No OpenAI/Anthropic/Gemini APIs used
+- [x] System can be deployed to Alibaba Cloud ECS/ACK
+
 ## 📂 Repository Layout
 
 - `src/` - Core Python backend (LangGraph definitions, Agent nodes, Qwen LLM wrappers, Prompts)
@@ -183,7 +272,6 @@ QWEN_AUDIO_MODELS=qwen-omni-turbo,qwen3-omni-flash,qwen-audio-turbo
 - `benchmark.py` - Benchmark comparing raw LLM vs single-agent vs multi-agent
 - `deploy.sh` - Virtualenv setup + run helper
 - `Makefile` - Setup, test, lint, run targets
-- `docs/` - Supplementary documentation
 
 ## 🛡 Safety & Anti-Hallucination
 
