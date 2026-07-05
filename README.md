@@ -52,7 +52,7 @@ flowchart TD
         RUNNER["legalis/agents.py<br/>run_trial_step() · dramatic opening"]
     end
 
-    subgraph AGENTS["🤖 Agent Society — 9 Specialized Qwen Agents"]
+    subgraph AGENTS["🤖 Agent Society — 11 Specialized Qwen Agents"]
         direction LR
         MAG["Magistrate<br/>qwen-max"]
         JUD["Judge<br/>qwen-max"]
@@ -61,7 +61,9 @@ flowchart TD
         WIT["Witnesses<br/>qwen-flash"]
         FC["Fact Checker<br/>qwen-flash"]
         CLK["Clerk<br/>qwen-flash"]
-        JURY["Jury / Foreperson<br/>qwen-plus-latest"]
+        FP["Foreperson<br/>qwen-plus-latest"]
+        JURY["Jury Panel (6-15)<br/>qwen-max · plus · flash · turbo"]
+        SHADOW["Shadow Juries (5-50)<br/>qwen-max · plus · flash · turbo"]
         ARCH["Archivist<br/>qwen-turbo-latest"]
     end
 
@@ -115,7 +117,9 @@ The simulation routes through the following specialized agents, strictly utilizi
 | 🗣️ **Witnesses** | Strict role-play agents bounded to their deposition facts. | `qwen-flash` |
 | 🔎 **Fact Checker** | The "hallucination catcher" that intercepts speculative witness statements and forces them to stick to the record. | `qwen-flash` |
 | 📝 **Clerk** | Compresses trial history into a Fact Sheet to prevent context overflow. | `qwen-flash` |
-| 👥 **Jury / Foreperson** | Diverse personalities that deliberate privately on the case summary. Detects hung juries after 3 rounds. | `qwen-plus-latest` |
+| 👤 **Jury Foreperson** | Leads deliberation, manages voting rounds, detects hung juries after 3 rounds. | `qwen-plus-latest` |
+| 👥 **Jury Panel** | 6-15 diverse jurors, each using a different Qwen model for varied deliberation perspectives. | `qwen-max` / `qwen-plus-latest` / `qwen-flash` / `qwen-turbo-latest` (random) |
+| 🔮 **Shadow Juries** | 5-50 independent juries that each evaluate evidence separately to compute win probability. | `qwen-max` / `qwen-plus-latest` / `qwen-flash` / `qwen-turbo-latest` (random) |
 | 📚 **Archivist** | Logs key rulings and final outcomes for future case references. | `qwen-turbo-latest` |
 
 ## 📊 Benchmark Results

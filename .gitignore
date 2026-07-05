@@ -38,3 +38,6 @@ benchmark_results.json
 
 # ── Pytest ────────────────────────────────────────────────────────
 .pytest_cache/
+
+# ── AI Assistant Config ──────────────────────────────────────────
+AGENTS.md

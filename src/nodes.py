@@ -8,6 +8,7 @@ import src.prompts as p
 from pydantic import BaseModel, Field
 import asyncio
 import re
+import random
 
 logger = get_logger(__name__)
 
@@ -75,6 +76,16 @@ def _strip_ruling_preamble(rationale: str, ruling: str) -> str:
     if text.startswith(ruling_upper):
         text = text[len(ruling_upper):].lstrip(".:;,- ").strip()
     return text
+
+
+# ── Model Pool for Jurors ─────────────────────────────────────────────────────
+
+_JUROR_MODEL_POOL = [
+    AGENT_MODELS["Magistrate"],       # qwen-max
+    AGENT_MODELS["Prosecutor"],       # qwen-plus-latest
+    AGENT_MODELS["Witness"],          # qwen-flash
+    AGENT_MODELS["Archivist"],        # qwen-turbo-latest
+]
 
 
 # ── Fact Sufficiency Helpers ─────────────────────────────────────────────────
@@ -210,10 +221,13 @@ def generate_dynamic_jury_profiles(state: TrialState) -> list[dict]:
                     "persona": "Evidence-focused juror",
                     "bias": "Reviews only admitted evidence and the legal standard",
                 })
+        # Assign random model to each juror for diversity
+        for profile in profiles:
+            profile["model"] = random.choice(_JUROR_MODEL_POOL)
         return profiles
     except Exception as e:
         logger.error(f"Jury Profile Generation Error: {e}")
-        return [
+        fallback_profiles = [
             {
                 "juror_id": juror_id,
                 "name": f"Juror {juror_id}",
@@ -223,6 +237,9 @@ def generate_dynamic_jury_profiles(state: TrialState) -> list[dict]:
             }
             for juror_id in range(1, n + 1)
         ]
+        for profile in fallback_profiles:
+            profile["model"] = random.choice(_JUROR_MODEL_POOL)
+        return fallback_profiles
 
 
 # ── Security Check ────────────────────────────────────────────────────────────
@@ -745,7 +762,7 @@ def _call_single_juror(
     Returns (statement_text, vote_string).
     """
     from src.llm import get_llm
-    juror_llm = get_llm(temperature=0.7, model=AGENT_MODELS.get("Witness", "qwen-flash"))
+    juror_llm = get_llm(temperature=0.7, model=juror_profile.get("model", "qwen-flash"))
 
     prior_block = ""
     if prior_statements:
@@ -869,6 +886,7 @@ def jury_deliberation_node(state: TrialState) -> dict:
                     "occupation": "Citizen juror",
                     "persona": "Evidence-focused juror",
                     "bias": "Reviews only admitted evidence and the governing standard",
+                    "model": random.choice(_JUROR_MODEL_POOL),
                 }
                 for juror_id in range(1, n + 1)
             ]
@@ -1066,7 +1084,6 @@ def shadow_jury_node(state: TrialState) -> dict:
     logger.info("--- SHADOW JURIES ---")
     jx = _get_jx(state)
     jury_count    = state.get("shadow_jury_count", 20)
-    jury_model    = state.get("shadow_jury_model", AGENT_MODELS["Jury Foreperson"])
     case_facts    = state.get("fact_sheet", state.get("case_description", ""))
     admitted      = state.get("admitted_evidence", [])
     legal_standard = jx["legal_standard"]
@@ -1076,7 +1093,10 @@ def shadow_jury_node(state: TrialState) -> dict:
         results = []
         for i in range(0, jury_count, chunk_size):
             chunk = range(i, min(i + chunk_size, jury_count))
-            tasks = [async_shadow_jury(j, case_facts, admitted, legal_standard, jury_model) for j in chunk]
+            tasks = [
+                async_shadow_jury(j, case_facts, admitted, legal_standard, random.choice(_JUROR_MODEL_POOL))
+                for j in chunk
+            ]
             results.extend(await asyncio.gather(*tasks))
             await asyncio.sleep(1)
         return results

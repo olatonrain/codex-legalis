@@ -107,7 +107,8 @@ codex-legalis/
 | **Fact Checker**    | Intercepts witness answers; triggers "Objection: Speculation" if witness invents facts outside their source text   | `qwen-flash`                    |
 | **Clerk**           | Compresses running trial history into a Fact Sheet and Admitted/Excluded Evidence list to prevent context overflow | `qwen-flash`                    |
 | **Jury Foreperson** | Leads jury deliberation; manages voting rounds; detects hung jury after 3 rounds                                   | `qwen-plus-latest`              |
-| **Jurors (3–5)**    | Diverse personalities; deliberate privately on the compressed case summary + judge's instructions                  | _(spawned by shadow jury node)_ |
+| **Jury Panel**      | 6-15 diverse jurors, each using a different Qwen model for varied deliberation perspectives                        | `qwen-max` / `qwen-plus-latest` / `qwen-flash` / `qwen-turbo-latest` (random) |
+| **Shadow Juries**   | 5-50 independent juries that each evaluate evidence separately to compute win probability                          | `qwen-max` / `qwen-plus-latest` / `qwen-flash` / `qwen-turbo-latest` (random) |
 | **Archivist**       | Logs key rulings and precedents; runs at end of trial as the final node                                            | `qwen-turbo-latest`             |
 
 Agent models are configured in `src/config.py → AGENT_MODELS`.
