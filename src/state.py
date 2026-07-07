@@ -33,6 +33,7 @@ def create_initial_state(
         "witness_queue": [],
         "current_witness": None,
         "examination_phase": None,
+        "witness_direct_qa": [],
         "shadow_jury_count": shadow_jury_count,
         "shadow_jury_model": "qwen-plus-latest",
         "jury_count": jury_count,
@@ -103,6 +104,7 @@ class TrialState(TypedDict):
     witness_queue: List[str]
     current_witness: Optional[str]
     examination_phase: Optional[str]   # 'direct', 'cross', or 'redirect'
+    witness_direct_qa: List[Dict[str, str]]  # Q&A log from direct, passed to cross-examination
     rebuttal_rounds: int          # 0 or 1 — rebuttal runs once
     objection_history: List[Dict[str, Any]]  # log of objections and rulings
     impeachment_attempts: List[Dict[str, Any]]  # impeachment log per witness

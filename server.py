@@ -68,6 +68,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch-all handler that ensures all errors return JSON, never HTML."""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"}
+    )
+
 BASE_DIR = Path(__file__).parent
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024

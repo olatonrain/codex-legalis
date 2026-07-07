@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 import re
 import random
 import uuid
+import json
 from pathlib import Path
 
 logger = get_logger(__name__)
@@ -35,6 +36,18 @@ class ObjectionOutput(BaseModel):
     objection_type: str = Field(description="The specific type of objection: hearsay, relevance, speculation, leading, compound, foundation, narrative, privilege, character, prejudice, best_evidence, authentication, or cumulative.")
     rule_cited: str = Field(description="The specific rule number or section from the governing evidence rules.")
     rationale: str = Field(description="Brief explanation of why the evidence should be excluded under this rule.")
+
+class ExaminationObjection(BaseModel):
+    should_object: bool = Field(default=False, description="Whether to raise an objection to this question during examination")
+    objection_type: str = Field(default="", description="Type of objection: leading, hearsay, speculation, compound, relevance, foundation, argumentative, asked_and_answered, narrative, badgering, or none")
+    rule_cited: str = Field(default="", description="The specific evidence rule being violated — only required if should_object is true")
+    rationale: str = Field(default="", description="Brief legal basis for the objection — only required if should_object is true")
+
+class EvidenceObjectionDecision(BaseModel):
+    should_object: bool = Field(default=False, description="True only if the evidence has a genuine, clear admissibility defect. False if the evidence appears admissible — do NOT object just because it is unfavorable.")
+    objection_type: str = Field(default="", description="The specific type of objection if should_object is True: hearsay, relevance, speculation, foundation, privilege, character, prejudice, best_evidence, authentication, or cumulative.")
+    rule_cited: str = Field(default="", description="The specific rule from the governing evidence rules — required only if should_object is True.")
+    rationale: str = Field(default="", description="Brief explanation of the admissibility defect — required only if should_object is True.")
 
 class JuryVerdict(BaseModel):
     verdict: str = Field(description="'Guilty', 'Not Guilty', 'Liable', or 'Not Liable'.")
@@ -662,10 +675,10 @@ def evidence_node(state: TrialState) -> dict:
     pros_llm  = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
     def_llm   = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
     judge_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
-    pros_obj_llm = get_structured_llm(ObjectionOutput, temperature=0.2, model=AGENT_MODELS["Prosecutor"])
-    def_obj_llm  = get_structured_llm(ObjectionOutput, temperature=0.2, model=AGENT_MODELS["Defense Counsel"])
+    def_decision_llm  = get_structured_llm(EvidenceObjectionDecision, temperature=0.3, model=AGENT_MODELS["Defense Counsel"])
+    pros_decision_llm = get_structured_llm(EvidenceObjectionDecision, temperature=0.3, model=AGENT_MODELS["Prosecutor"])
 
-    # ── Round 1: Prosecution presents, Defence objects ────────────
+    # ── Round 1: Prosecution presents, Defence OPTIONALLY objects ─────────────
     pros_ev = pros_llm.invoke([
         SystemMessage(content=p.prosecutor_prompt(jx)),
         HumanMessage(content=(
@@ -676,34 +689,66 @@ def evidence_node(state: TrialState) -> dict:
     ])
     transcript.append(AIMessage(content=pros_ev.content, name="Prosecutor"))
 
-    def_obj = _issue_structured_objection(def_obj_llm, p.defense_objection_prompt, jx, pros_ev.content, facts)
-    transcript.append(AIMessage(
-        content=f"Objection — {_OBJECTION_TYPE_NAMES.get(def_obj.objection_type, def_obj.objection_type).upper()}. {def_obj.rule_cited}: {def_obj.rationale}",
-        name="Defense Counsel",
-    ))
+    # Defence decides whether to object
+    try:
+        def_decision = def_decision_llm.invoke([
+            SystemMessage(content=p.defense_objection_prompt(jx)),
+            HumanMessage(content=(
+                f"The prosecution has presented this evidence:\n\"{pros_ev.content}\"\n\n"
+                f"Case facts:\n{facts}\n\n"
+                f"Does this evidence have a GENUINE, CLEAR admissibility defect under {jx['evidence_rules']}? "
+                f"If yes, set should_object=true and specify the defect. "
+                f"If the evidence appears admissible (even if unfavourable), set should_object=false. "
+                f"Return a JSON object with: should_object, objection_type, rule_cited, rationale."
+            ))
+        ])
+    except Exception as e:
+        logger.error(f"Evidence objection decision error (defence): {e}")
+        def_decision = EvidenceObjectionDecision(should_object=False)
 
-    exception_arg = ""
-    if def_obj.objection_type == "hearsay":
-        exception_arg = _argue_hearsay_exception(pros_llm, p.prosecutor_prompt, jx, def_obj, pros_ev.content)
-        transcript.append(AIMessage(content=f"Response — {exception_arg}", name="Prosecutor"))
+    if def_decision.should_object and def_decision.objection_type:
+        transcript.append(AIMessage(
+            content=f"Objection — {_OBJECTION_TYPE_NAMES.get(def_decision.objection_type, def_decision.objection_type).upper()}. {def_decision.rule_cited}: {def_decision.rationale}",
+            name="Defense Counsel",
+        ))
+        exception_arg = ""
+        if def_decision.objection_type == "hearsay":
+            obj_out = ObjectionOutput(
+                objection_type=def_decision.objection_type,
+                rule_cited=def_decision.rule_cited,
+                rationale=def_decision.rationale,
+            )
+            exception_arg = _argue_hearsay_exception(pros_llm, p.prosecutor_prompt, jx, obj_out, pros_ev.content)
+            transcript.append(AIMessage(content=f"Response — {exception_arg}", name="Prosecutor"))
 
-    ruling1 = _judge_rule_on_objection(judge_llm, jx, pros_ev.content, def_obj, exception_arg)
-    objection_log.append({
-        "phase": "evidence",
-        "round": 1,
-        "objector": "Defense Counsel",
-        "evidence": pros_ev.content,
-        "objection_type": def_obj.objection_type,
-        "rule_cited": def_obj.rule_cited,
-        "rationale": def_obj.rationale,
-        "hearsay_exception_argued": exception_arg if exception_arg else None,
-        "ruling": ruling1.ruling,
-        "ruling_rationale": ruling1.rationale,
-    })
-    ruling1_text = f"The objection is {ruling1.ruling}." + (f" {_strip_ruling_preamble(ruling1.rationale, ruling1.ruling)}" if ruling1.rationale else "")
-    transcript.append(AIMessage(content=ruling1_text, name="Judge"))
+        obj_for_ruling = ObjectionOutput(
+            objection_type=def_decision.objection_type,
+            rule_cited=def_decision.rule_cited,
+            rationale=def_decision.rationale,
+        )
+        ruling1 = _judge_rule_on_objection(judge_llm, jx, pros_ev.content, obj_for_ruling, exception_arg if def_decision.objection_type == "hearsay" else "")
+        objection_log.append({
+            "phase": "evidence",
+            "round": 1,
+            "objector": "Defense Counsel",
+            "evidence": pros_ev.content,
+            "objection_type": def_decision.objection_type,
+            "rule_cited": def_decision.rule_cited,
+            "rationale": def_decision.rationale,
+            "hearsay_exception_argued": exception_arg if def_decision.objection_type == "hearsay" else None,
+            "ruling": ruling1.ruling,
+            "ruling_rationale": ruling1.rationale,
+        })
+        ruling1_text = f"The objection is {ruling1.ruling}." + (f" {_strip_ruling_preamble(ruling1.rationale, ruling1.ruling)}" if ruling1.rationale else "")
+        transcript.append(AIMessage(content=ruling1_text, name="Judge"))
+    else:
+        # No objection — evidence stands without challenge
+        transcript.append(AIMessage(
+            content=f"No objection. The evidence is admitted.",
+            name="Defense Counsel",
+        ))
 
-    # ── Round 2: Defence presents counter-evidence ────────────────
+    # ── Round 2: Defence presents, Prosecution OPTIONALLY objects ─────────────
     def_ev = def_llm.invoke([
         SystemMessage(content=p.defense_prompt(jx)),
         HumanMessage(content=(
@@ -714,32 +759,63 @@ def evidence_node(state: TrialState) -> dict:
     ])
     transcript.append(AIMessage(content=def_ev.content, name="Defense Counsel"))
 
-    pros_obj = _issue_structured_objection(pros_obj_llm, p.prosecution_objection_prompt, jx, def_ev.content, facts)
-    transcript.append(AIMessage(
-        content=f"Objection — {_OBJECTION_TYPE_NAMES.get(pros_obj.objection_type, pros_obj.objection_type).upper()}. {pros_obj.rule_cited}: {pros_obj.rationale}",
-        name="Prosecutor",
-    ))
+    # Prosecution decides whether to object
+    try:
+        pros_decision = pros_decision_llm.invoke([
+            SystemMessage(content=p.prosecution_objection_prompt(jx)),
+            HumanMessage(content=(
+                f"The defence has presented this evidence:\n\"{def_ev.content}\"\n\n"
+                f"Case facts:\n{facts}\n\n"
+                f"Does this evidence have a GENUINE, CLEAR admissibility defect under {jx['evidence_rules']}? "
+                f"If yes, set should_object=true and specify the defect. "
+                f"If the evidence appears admissible (even if unfavourable), set should_object=false. "
+                f"Return a JSON object with: should_object, objection_type, rule_cited, rationale."
+            ))
+        ])
+    except Exception as e:
+        logger.error(f"Evidence objection decision error (prosecution): {e}")
+        pros_decision = EvidenceObjectionDecision(should_object=False)
 
-    exception_arg2 = ""
-    if pros_obj.objection_type == "hearsay":
-        exception_arg2 = _argue_hearsay_exception(def_llm, p.defense_prompt, jx, pros_obj, def_ev.content)
-        transcript.append(AIMessage(content=f"Response — {exception_arg2}", name="Defense Counsel"))
+    if pros_decision.should_object and pros_decision.objection_type:
+        transcript.append(AIMessage(
+            content=f"Objection — {_OBJECTION_TYPE_NAMES.get(pros_decision.objection_type, pros_decision.objection_type).upper()}. {pros_decision.rule_cited}: {pros_decision.rationale}",
+            name="Prosecutor",
+        ))
+        exception_arg2 = ""
+        if pros_decision.objection_type == "hearsay":
+            obj_out2 = ObjectionOutput(
+                objection_type=pros_decision.objection_type,
+                rule_cited=pros_decision.rule_cited,
+                rationale=pros_decision.rationale,
+            )
+            exception_arg2 = _argue_hearsay_exception(def_llm, p.defense_prompt, jx, obj_out2, def_ev.content)
+            transcript.append(AIMessage(content=f"Response — {exception_arg2}", name="Defense Counsel"))
 
-    ruling2 = _judge_rule_on_objection(judge_llm, jx, def_ev.content, pros_obj, exception_arg2)
-    objection_log.append({
-        "phase": "evidence",
-        "round": 2,
-        "objector": "Prosecutor",
-        "evidence": def_ev.content,
-        "objection_type": pros_obj.objection_type,
-        "rule_cited": pros_obj.rule_cited,
-        "rationale": pros_obj.rationale,
-        "hearsay_exception_argued": exception_arg2 if exception_arg2 else None,
-        "ruling": ruling2.ruling,
-        "ruling_rationale": ruling2.rationale,
-    })
-    ruling2_text = f"The objection is {ruling2.ruling}." + (f" {_strip_ruling_preamble(ruling2.rationale, ruling2.ruling)}" if ruling2.rationale else "")
-    transcript.append(AIMessage(content=ruling2_text, name="Judge"))
+        obj_for_ruling2 = ObjectionOutput(
+            objection_type=pros_decision.objection_type,
+            rule_cited=pros_decision.rule_cited,
+            rationale=pros_decision.rationale,
+        )
+        ruling2 = _judge_rule_on_objection(judge_llm, jx, def_ev.content, obj_for_ruling2, exception_arg2 if pros_decision.objection_type == "hearsay" else "")
+        objection_log.append({
+            "phase": "evidence",
+            "round": 2,
+            "objector": "Prosecutor",
+            "evidence": def_ev.content,
+            "objection_type": pros_decision.objection_type,
+            "rule_cited": pros_decision.rule_cited,
+            "rationale": pros_decision.rationale,
+            "hearsay_exception_argued": exception_arg2 if pros_decision.objection_type == "hearsay" else None,
+            "ruling": ruling2.ruling,
+            "ruling_rationale": ruling2.rationale,
+        })
+        ruling2_text = f"The objection is {ruling2.ruling}." + (f" {_strip_ruling_preamble(ruling2.rationale, ruling2.ruling)}" if ruling2.rationale else "")
+        transcript.append(AIMessage(content=ruling2_text, name="Judge"))
+    else:
+        transcript.append(AIMessage(
+            content="No objection. The evidence is admitted.",
+            name="Prosecutor",
+        ))
 
     # Update clerk state immediately with the new rulings
     updated_state = {**state, "transcript": state.get("transcript", []) + transcript}
@@ -1044,21 +1120,199 @@ def _qualify_expert(
 
 # ── Witness Examination ───────────────────────────────────────────────────────
 
+def _parse_json_robustly(text: str) -> dict:
+    """
+    Attempts to extract and parse a JSON object from text, handling common LLM formatting issues
+    such as markdown code blocks, leading/trailing text, and single quotes.
+    """
+    text = text.strip()
+    # Try finding the first '{' and last '}'
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1 and end > start:
+        json_str = text[start:end+1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            try:
+                # Replace single quotes with double quotes
+                cleaned = json_str.replace("'", '"')
+                # Remove trailing commas before closing braces/brackets
+                cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+                return json.loads(cleaned)
+            except Exception:
+                pass
+    
+    # Brute-force regex attempt for should_object
+    result = {}
+    if "should_object" in text:
+        match_true = re.search(r'"should_object"\s*:\s*true', text, re.IGNORECASE)
+        match_false = re.search(r'"should_object"\s*:\s*false', text, re.IGNORECASE)
+        if match_true:
+            result["should_object"] = True
+        elif match_false:
+            result["should_object"] = False
+            
+    for key in ["objection_type", "rule_cited", "rationale"]:
+        match = re.search(fr'"{key}"\s*:\s*"([^"]*)"', text)
+        if match:
+            result[key] = match.group(1)
+            
+    return result
+
+
+def _ask_with_objection_gate(
+    question_text, asking_name, opposing_name, opposing_model,
+    witness_name, witness_llm, fc_llm, judge_ruling_llm,
+    facts, jx, phase_type,
+    transcript, objection_log,
+    qa_log=None, answer_key="a", qa_wrapper=False,
+):
+    """
+    Single-question Q&A with opposing counsel objection check.
+    Used for impeachment and redirect examination.
+
+    If the opposing counsel objects and the judge SUSTAINS, the witness
+    does not answer — the question is struck. If OVERRULED or no objection,
+    the witness answers with Fact Checker gating.
+    """
+    # ── Objection Check ───────────────────────────────────────
+    obj = ExaminationObjection(should_object=False)
+    try:
+        opposing_llm = get_llm(temperature=0.1, model=opposing_model)
+        resp = opposing_llm.invoke([
+            SystemMessage(content=p.examination_objection_prompt(jx, opposing_name, phase_type)),
+            HumanMessage(content=(
+                f"Opposing counsel ({asking_name}) asked this question to {witness_name} "
+                f"during {phase_type}:\n\"{question_text}\"\n\n"
+                f"Case facts:\n{facts}\n\n"
+                f"Respond with a JSON object: {{\"should_object\": false}} if you do NOT object, "
+                f"or {{\"should_object\": true, \"objection_type\": \"...\", \"rule_cited\": \"...\", \"rationale\": \"...\"}} if you DO object."
+            ))
+        ])
+        text = resp.content.strip()
+        data = _parse_json_robustly(text)
+        obj = ExaminationObjection(**{k: v for k, v in data.items() if hasattr(ExaminationObjection, k)})
+    except Exception as e:
+        logger.error(f"Objection check error in {phase_type}: {e}")
+        obj = ExaminationObjection(should_object=False)
+
+    question_struck = False
+    if obj.should_object:
+        transcript.append(AIMessage(
+            content=f"Objection — {obj.objection_type.upper()}. {obj.rule_cited}: {obj.rationale}",
+            name=opposing_name,
+        ))
+
+        try:
+            ruling = judge_ruling_llm.invoke([
+                SystemMessage(content=p.judge_prompt(jx)),
+                HumanMessage(content=(
+                    f"During {phase_type}, {opposing_name} objects to this question to {witness_name}:\n"
+                    f"\"{question_text}\"\n\n"
+                    f"Objection type: {obj.objection_type}\n"
+                    f"Rule cited: {obj.rule_cited}\n"
+                    f"Rationale: {obj.rationale}\n\n"
+                    f"Rule on this objection under {jx['evidence_rules']}. Return a JSON object."
+                ))
+            ])
+        except Exception as e:
+            logger.error(f"Judge ruling error in {phase_type}: {e}")
+            transcript.append(AIMessage(content="[Judge ruling unavailable — the question stands]", name="System"))
+        else:
+            objection_log.append({
+                "phase": f"witness_{phase_type}",
+                "objector": opposing_name,
+                "examiner": asking_name,
+                "witness": witness_name,
+                "question": question_text,
+                "objection_type": obj.objection_type,
+                "rule_cited": obj.rule_cited,
+                "rationale": obj.rationale,
+                "ruling": ruling.ruling,
+                "ruling_rationale": ruling.rationale,
+            })
+
+            ruling_text = f"OBJECTION {ruling.ruling}." + (
+                f" {_strip_ruling_preamble(ruling.rationale, ruling.ruling)}"
+                if ruling.rationale else ""
+            )
+            transcript.append(AIMessage(content=ruling_text, name="Judge"))
+
+            if ruling.ruling.upper() == "SUSTAINED":
+                question_struck = True
+                if qa_log is not None and qa_wrapper:
+                    qa_log.append({"question": question_text, answer_key: "[OBJECTION SUSTAINED — QUESTION STRUCK]"})
+
+    if question_struck:
+        return
+
+    # ── Witness Answer ───────────────────────────────────────
+    try:
+        a = witness_llm.invoke([
+            SystemMessage(content=p.witness_prompt(jx)),
+            HumanMessage(content=(
+                f"You are {witness_name}. Answer in 40 words or fewer.\n"
+                f"Q: {question_text}\n"
+                f"Case facts:\n{facts}"
+            ))
+        ])
+    except Exception as e:
+        logger.error(f"Witness LLM error in {phase_type}: {e}")
+        transcript.append(AIMessage(content="[Witness could not respond]", name="System"))
+        return
+
+    try:
+        fc = fc_llm.invoke([
+            SystemMessage(content=p.fact_checker_prompt(jx)),
+            HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{a.content}")
+        ])
+    except Exception:
+        fc = AIMessage(content="PASS")
+
+    if not fc.content.strip().upper().startswith("PASS"):
+        transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
+        try:
+            a = witness_llm.invoke([
+                SystemMessage(content=p.witness_prompt(jx)),
+                HumanMessage(content=(
+                    f"You are {witness_name}.\n"
+                    f"Question: {question_text}\n"
+                    f"Your previous answer was objected to: {fc.content}\n"
+                    f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
+                ))
+            ])
+        except Exception:
+            pass
+        transcript.append(AIMessage(content=a.content, name="Witness"))
+        if qa_log is not None and qa_wrapper:
+            qa_log.append({"question": question_text, answer_key: a.content})
+    else:
+        transcript.append(AIMessage(content=a.content, name="Witness"))
+        if qa_log is not None and qa_wrapper:
+            qa_log.append({"question": question_text, answer_key: a.content})
+
+
 def _examination_loop(
     examiner_llm, examiner_prompt_fn, examiner_name,
     witness_name, witness_llm, fc_llm,
     facts, jx, phase_type, max_q,
     prior_context="", transcript=None,
+    judge_ruling_llm=None, objection_log=None,
 ) -> list[dict]:
     """
     Dynamic examination loop — asks questions until the examiner says DONE
     or hits max_q. Fact-checker gates every witness answer.
+    If judge_ruling_llm is provided, opposing counsel gets an opportunity
+    to object to every question before the witness answers.
 
     Returns list of {"q": ..., "a": ...} dicts for cross-examination reference.
     Appends AIMessages to transcript in-place.
     """
     if transcript is None:
         transcript = []
+    if objection_log is None:
+        objection_log = []
 
     qa_log = []
     phase_objectives = {
@@ -1076,23 +1330,55 @@ def _examination_loop(
     objective = phase_objectives.get(phase_type, phase_objectives["direct"])
     question_rule = phase_rules.get(phase_type, phase_rules["direct"])
 
-    for q_num in range(1, max_q + 1):
+    # Determine opposing counsel for objection checks
+    if judge_ruling_llm is not None:
+        if examiner_name == "Prosecutor":
+            opposing_name = "Defense Counsel"
+            opposing_model = AGENT_MODELS["Defense Counsel"]
+        elif examiner_name == "Defense Counsel":
+            opposing_name = "Prosecutor"
+            opposing_model = AGENT_MODELS["Prosecutor"]
+        else:
+            opposing_name = examiner_name
+            opposing_model = AGENT_MODELS.get("Judge", "qwen-max")
+        try:
+            opposing_llm = get_llm(temperature=0.1, model=opposing_model)
+        except Exception:
+            opposing_llm = None
+    else:
+        opposing_llm = None
+        opposing_name = ""
+
+    # Use while loop so sustained objections don't consume question budget
+    q_num = 1
+    sustained_in_a_row = 0
+    total_attempts = 0
+    MAX_TOTAL_ATTEMPTS = max_q * 3  # hard safety cap — prevents infinite loops
+    MAX_SUSTAINED_STREAK = 3
+
+    while q_num <= max_q and total_attempts < MAX_TOTAL_ATTEMPTS:
+        total_attempts += 1
         history = str(qa_log[-4:]) if qa_log else "(no prior questions)"
         if prior_context and q_num == 1:
             history = prior_context
 
-        q = examiner_llm.invoke([
-            SystemMessage(content=examiner_prompt_fn(jx)),
-            HumanMessage(content=(
-                f"{phase_type.upper().replace('_', ' ')} — Q{q_num} (max {max_q}) to {witness_name}.\n"
-                f"Objective: {objective}\n"
-                f"{question_rule}\n"
-                f"Prior Q&A: {history}\n\n"
-                f"If you have fully established your points and have nothing meaningful left to ask, "
-                f"respond with exactly the word 'DONE' and nothing else.\n"
-                f"Otherwise, ask ONE short question (under 25 words). Base it on these case facts:\n\n{facts}"
-            ))
-        ])
+        try:
+            q = examiner_llm.invoke([
+                SystemMessage(content=examiner_prompt_fn(jx)),
+                HumanMessage(content=(
+                    f"{phase_type.upper().replace('_', ' ')} — Q{q_num} (max {max_q}) to {witness_name}.\n"
+                    f"Objective: {objective}\n"
+                    f"{question_rule}\n"
+                    f"Prior Q&A: {history}\n\n"
+                    f"If you have fully established your points and have nothing meaningful left to ask, "
+                    f"respond with exactly the word 'DONE' and nothing else.\n"
+                    f"Otherwise, ask ONE short question (under 25 words). Base it on these case facts:\n\n{facts}"
+                ))
+            ])
+        except Exception as e:
+            logger.error(f"Examiner LLM error in {phase_type} Q{q_num}: {e}")
+            transcript.append(AIMessage(content=f"[Examiner error — proceeding to next witness]", name="System"))
+            break
 
         content = q.content.strip()
         if content.upper() == "DONE" or content.upper().startswith("DONE"):
@@ -1100,66 +1386,174 @@ def _examination_loop(
 
         transcript.append(AIMessage(content=content, name=examiner_name))
 
-        a = witness_llm.invoke([
-            SystemMessage(content=p.witness_prompt(jx)),
-            HumanMessage(content=(
-                f"You are {witness_name}. Answer in 40 words or fewer.\n"
-                f"Q: {content}\n"
-                f"Case facts:\n{facts}"
-            ))
-        ])
+        # ── Opposing Counsel Objection Check ──────────────────────────
+        if opposing_llm is not None and judge_ruling_llm is not None:
+            obj = ExaminationObjection(should_object=False)
+            try:
+                resp = opposing_llm.invoke([
+                    SystemMessage(content=p.examination_objection_prompt(jx, opposing_name, phase_type)),
+                    HumanMessage(content=(
+                        f"Opposing counsel ({examiner_name}) asked this question to {witness_name} "
+                        f"during {phase_type} examination:\n\"{content}\"\n\n"
+                        f"Case facts:\n{facts}\n\n"
+                        f"Respond with a JSON object: {{\"should_object\": false}} if you do NOT object, "
+                        f"or {{\"should_object\": true, \"objection_type\": \"...\", \"rule_cited\": \"...\", \"rationale\": \"...\"}} if you DO object."
+                    ))
+                ])
+                text = resp.content.strip()
+                data = _parse_json_robustly(text)
+                obj = ExaminationObjection(**{k: v for k, v in data.items() if hasattr(ExaminationObjection, k)})
+            except Exception as e:
+                logger.error(f"Opposing counsel objection check error in {phase_type}: {e}")
 
-        fc = fc_llm.invoke([
-            SystemMessage(content=p.fact_checker_prompt(jx)),
-            HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{a.content}")
-        ])
+            if obj.should_object:
+                transcript.append(AIMessage(
+                    content=f"Objection — {obj.objection_type.upper()}. {obj.rule_cited}: {obj.rationale}",
+                    name=opposing_name,
+                ))
 
-        if not fc.content.strip().upper().startswith("PASS"):
-            transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
+                try:
+                    ruling = judge_ruling_llm.invoke([
+                        SystemMessage(content=p.judge_prompt(jx)),
+                        HumanMessage(content=(
+                            f"During {phase_type} examination of {witness_name}, {opposing_name} objects to this question:\n"
+                            f"\"{content}\"\n\n"
+                            f"Objection type: {obj.objection_type}\n"
+                            f"Rule cited: {obj.rule_cited}\n"
+                            f"Rationale: {obj.rationale}\n\n"
+                            f"Rule on this objection under {jx['evidence_rules']}. Return a JSON object."
+                        ))
+                    ])
+                except Exception as e:
+                    logger.error(f"Judge ruling error in {phase_type}: {e}")
+                    transcript.append(AIMessage(content="[Judge ruling unavailable — objection noted but question stands]", name="System"))
+                    q_num += 1
+                    sustained_in_a_row = 0
+                    continue
+
+                objection_log.append({
+                    "phase": f"witness_{phase_type}",
+                    "objector": opposing_name,
+                    "examiner": examiner_name,
+                    "witness": witness_name,
+                    "question": content,
+                    "objection_type": obj.objection_type,
+                    "rule_cited": obj.rule_cited,
+                    "rationale": obj.rationale,
+                    "ruling": ruling.ruling,
+                    "ruling_rationale": ruling.rationale,
+                })
+
+                ruling_text = f"OBJECTION {ruling.ruling}." + (
+                    f" {_strip_ruling_preamble(ruling.rationale, ruling.ruling)}"
+                    if ruling.rationale else ""
+                )
+                transcript.append(AIMessage(content=ruling_text, name="Judge"))
+
+                if ruling.ruling.upper() == "SUSTAINED":
+                    sustained_in_a_row += 1
+                    qa_log.append({"q": content, "a": "[OBJECTION SUSTAINED — QUESTION STRUCK]"})
+                    if sustained_in_a_row >= MAX_SUSTAINED_STREAK:
+                        transcript.append(AIMessage(
+                            content=f"Counsel, please rephrase your line of questioning.",
+                            name="Judge"
+                        ))
+                        sustained_in_a_row = 0
+                        q_num += 1  # force progress after repeated sustained objections
+                        continue
+                    # Don't increment q_num — examiner gets another attempt
+                    continue
+                else:
+                    sustained_in_a_row = 0
+                    # Objection OVERRULED — witness answers
+
+        # ── Witness Answer ────────────────────────────────────────────
+        try:
             a = witness_llm.invoke([
                 SystemMessage(content=p.witness_prompt(jx)),
                 HumanMessage(content=(
-                    f"You are {witness_name}.\n"
-                    f"Question: {content}\n"
-                    f"Your previous answer was objected to: {fc.content}\n"
-                    f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
+                    f"You are {witness_name}. Answer in 40 words or fewer.\n"
+                    f"Q: {content}\n"
+                    f"Case facts:\n{facts}"
                 ))
             ])
+        except Exception as e:
+            logger.error(f"Witness LLM error in {phase_type} Q{q_num}: {e}")
+            transcript.append(AIMessage(content="[Witness could not respond — continuing]", name="System"))
+            q_num += 1
+            continued_in_a_row = 0
+            continue
+
+        try:
+            fc = fc_llm.invoke([
+                SystemMessage(content=p.fact_checker_prompt(jx)),
+                HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{a.content}")
+            ])
+        except Exception as e:
+            logger.error(f"Fact checker error in {phase_type} Q{q_num}: {e}")
+            transcript.append(AIMessage(content=a.content, name="Witness"))
+            qa_log.append({"q": content, "a": a.content})
+            q_num += 1
+            sustained_in_a_row = 0
+            continue
+
+        if not fc.content.strip().upper().startswith("PASS"):
+            transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
+            try:
+                a = witness_llm.invoke([
+                    SystemMessage(content=p.witness_prompt(jx)),
+                    HumanMessage(content=(
+                        f"You are {witness_name}.\n"
+                        f"Question: {content}\n"
+                        f"Your previous answer was objected to: {fc.content}\n"
+                        f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
+                    ))
+                ])
+            except Exception as e:
+                logger.error(f"Witness correction error in {phase_type} Q{q_num}: {e}")
             transcript.append(AIMessage(content=a.content, name="Witness"))
             qa_log.append({"q": content, "a": a.content})
         else:
             transcript.append(AIMessage(content=a.content, name="Witness"))
             qa_log.append({"q": content, "a": a.content})
 
+        q_num += 1
+        sustained_in_a_row = 0
+
     return qa_log
 
 
-def witness_node(state: TrialState) -> dict:
+def witness_direct(state: TrialState) -> dict:
     """
-    Full examination protocol:
-      Direct (dynamic, up to 20 Qs) → Cross (dynamic, up to 15 Qs) → Impeachment → Redirect
-    Inquisitorial: Judge leads (3 Qs) → Prosecutor follow-up (up to 8) → Defense follow-up (up to 8)
+    Step 1 of Witness Examination:
+    Pops a witness from the queue (if current_witness is not set), performs expert qualification if necessary,
+    and runs the Direct Examination (adversarial) or Judge leads questioning (inquisitorial).
     """
-    logger.info("--- WITNESS EXAMINATION ---")
+    logger.info("--- WITNESS EXAMINATION: DIRECT ---")
     jx = _get_jx(state)
     witness_queue = list(state.get("witness_queue", []))
-    if not witness_queue:
-        return {}
-
-    current_witness = witness_queue.pop(0)
+    current_witness = state.get("current_witness")
+    
+    # If starting a new witness, pop from queue
+    if not current_witness:
+        if not witness_queue:
+            return {}
+        current_witness = witness_queue.pop(0)
+        
     transcript = []
     facts = state.get("case_description", "")
-
+    
     pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
     def_llm  = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
     wit_llm  = get_llm(temperature=0.5, model=AGENT_MODELS["Witness"])
     fc_llm   = get_llm(temperature=0.0, model=AGENT_MODELS["Fact Checker"])
     judge_llm = get_llm(temperature=0.1, model=AGENT_MODELS["Judge"])
-
-    direct_qa = []  # Stores (question, answer) for cross-examination reference
+    judge_ruling_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
+    
     expert_witnesses = list(state.get("expert_witnesses", []))
-    impeachment_log = list(state.get("impeachment_attempts", []))
-
+    objection_log = list(state.get("objection_history", []))
+    
+    # Voir Dire (Expert qualification)
     expert_qualified = False
     if _is_expert_candidate(current_witness) and jx["cross"]:
         expert_qualified = _qualify_expert(
@@ -1167,8 +1561,16 @@ def witness_node(state: TrialState) -> dict:
         )
         if expert_qualified:
             expert_witnesses.append(current_witness)
-
+            
+    direct_qa = []
+    
+    # Visual phase transition banner
     if jx["cross"]:
+        transcript.append(AIMessage(
+            content=f"⚖️ Witness Examination of {current_witness} — Direct Examination begins.",
+            name="Judge"
+        ))
+        
         # ── ADVERSARIAL: Direct Examination (dynamic, up to 20 Qs) ──
         direct_qa = _examination_loop(
             examiner_llm=pros_llm,
@@ -1182,11 +1584,119 @@ def witness_node(state: TrialState) -> dict:
             phase_type="direct",
             max_q=20,
             transcript=transcript,
+            judge_ruling_llm=judge_ruling_llm,
+            objection_log=objection_log,
         )
+    else:
+        transcript.append(AIMessage(
+            content=f"⚖️ Inquisitorial Witness Examination of {current_witness} — Judicial Inquiry begins.",
+            name="Judge"
+        ))
+        
+        # ── INQUISITORIAL: Judge leads (3 Qs) ────
+        for q_num in range(1, 4):
+            try:
+                q = judge_llm.invoke([
+                    SystemMessage(content=p.judge_prompt(jx)),
+                    HumanMessage(content=(
+                        f"JUDICIAL EXAMINATION — Question {q_num} of 3.\n"
+                        f"Witness: {current_witness}.\n"
+                        f"Ask a neutral, fact-finding question.\nCase facts:\n{facts}"
+                    ))
+                ])
+            except Exception as e:
+                logger.error(f"Judge question error in inquisitorial Q{q_num}: {e}")
+                continue
 
+            transcript.append(AIMessage(content=f"Q (Judge): {q.content}", name="Judge"))
+
+            try:
+                a = wit_llm.invoke([
+                    SystemMessage(content=p.witness_prompt(jx)),
+                    HumanMessage(content=(
+                        f"You are {current_witness}.\n"
+                        f"The Judge asks: {q.content}\n"
+                        f"Answer based ONLY on these case facts:\n{facts}"
+                    ))
+                ])
+            except Exception as e:
+                logger.error(f"Witness answer error in inquisitorial Q{q_num}: {e}")
+                transcript.append(AIMessage(content="[Witness could not respond]", name="System"))
+                continue
+
+            try:
+                fc = fc_llm.invoke([
+                    SystemMessage(content=p.fact_checker_prompt(jx)),
+                    HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{a.content}")
+                ])
+            except Exception:
+                fc = AIMessage(content="PASS")
+
+            if not fc.content.strip().upper().startswith("PASS"):
+                transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
+                try:
+                    a = wit_llm.invoke([
+                        SystemMessage(content=p.witness_prompt(jx)),
+                        HumanMessage(content=(
+                            f"You are {current_witness}.\n"
+                            f"The Judge asks: {q.content}\n"
+                            f"Your previous answer was objected to: {fc.content}\n"
+                            f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
+                        ))
+                    ])
+                except Exception:
+                    pass
+                transcript.append(AIMessage(content=a.content, name="Witness"))
+            else:
+                transcript.append(AIMessage(content=a.content, name="Witness"))
+
+    # Prepare next state updates
+    updated_state = {**state, "transcript": state.get("transcript", []) + transcript}
+    clerk_update = _clerk_compression(updated_state)
+    
+    return {
+        "witness_queue": witness_queue,
+        "current_witness": current_witness,
+        "witness_direct_qa": direct_qa,
+        "transcript": transcript,
+        "expert_witnesses": expert_witnesses,
+        "objection_history": objection_log,
+        **clerk_update
+    }
+
+
+def witness_cross(state: TrialState) -> dict:
+    """
+    Step 2 of Witness Examination:
+    Runs Cross-Examination (adversarial) or Prosecutor follow-up (inquisitorial).
+    """
+    logger.info("--- WITNESS EXAMINATION: CROSS ---")
+    jx = _get_jx(state)
+    current_witness = state.get("current_witness")
+    if not current_witness:
+        return {}
+        
+    transcript = []
+    facts = state.get("case_description", "")
+    
+    pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
+    def_llm  = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
+    wit_llm  = get_llm(temperature=0.5, model=AGENT_MODELS["Witness"])
+    fc_llm   = get_llm(temperature=0.0, model=AGENT_MODELS["Fact Checker"])
+    judge_ruling_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
+    
+    objection_log = list(state.get("objection_history", []))
+    direct_qa = state.get("witness_direct_qa", [])
+    
+    if jx["cross"]:
+        transcript.append(AIMessage(
+            content=f"⚖️ Witness Examination of {current_witness} — Defense Cross-Examination begins.",
+            name="Judge"
+        ))
+        
         # ── ADVERSARIAL: Cross-Examination (dynamic, up to 15 Qs) ──
         prior_str = str(direct_qa[-4:]) if direct_qa else ""
-        cross_qa = _examination_loop(
+        _examination_loop(
             examiner_llm=def_llm,
             examiner_prompt_fn=p.defense_prompt,
             examiner_name="Defense Counsel",
@@ -1199,146 +1709,21 @@ def witness_node(state: TrialState) -> dict:
             max_q=15,
             prior_context=prior_str,
             transcript=transcript,
+            judge_ruling_llm=judge_ruling_llm,
+            objection_log=objection_log,
         )
-
-        # ── ADVERSARIAL: Impeachment Question (1 focused Q) ─────────
-        impeach_q = def_llm.invoke([
-            SystemMessage(content=p.defense_impeachment_prompt(jx)),
-            HumanMessage(content=(
-                f"IMPEACHMENT — 1 question to {current_witness}.\n"
-                f"Their direct answers: {direct_qa}\n\n"
-                f"Ask ONE short question (under 20 words) designed to challenge the witness's "
-                f"credibility: bias, prior inconsistent statement, bad character for truthfulness, "
-                f"or inability to observe. Base it on the case facts.\nFacts:\n{facts}"
-            ))
-        ])
-        transcript.append(AIMessage(content=impeach_q.content, name="Defense Counsel"))
-
-        impeach_a = wit_llm.invoke([
-            SystemMessage(content=p.witness_prompt(jx)),
-            HumanMessage(content=(
-                f"You are {current_witness}.\n"
-                f"The defence asks (impeachment): {impeach_q.content}\n"
-                f"Answer based ONLY on these case facts:\n{facts}"
-            ))
-        ])
-
-        fc = fc_llm.invoke([
-            SystemMessage(content=p.fact_checker_prompt(jx)),
-            HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{impeach_a.content}")
-        ])
-
-        if not fc.content.strip().upper().startswith("PASS"):
-            transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
-            impeach_a = wit_llm.invoke([
-                SystemMessage(content=p.witness_prompt(jx)),
-                HumanMessage(content=(
-                    f"You are {current_witness}.\n"
-                    f"The defence asks (impeachment): {impeach_q.content}\n"
-                    f"Your previous answer was objected to: {fc.content}\n"
-                    f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
-                ))
-            ])
-            transcript.append(AIMessage(content=impeach_a.content, name="Witness"))
-        else:
-            transcript.append(AIMessage(content=impeach_a.content, name="Witness"))
-
-        impeachment_log.append({
-            "witness": current_witness,
-            "question": impeach_q.content,
-            "answer": impeach_a.content,
-        })
-
-        # ── ADVERSARIAL: Redirect Examination (1 question) ─────────
-        redirect_q = pros_llm.invoke([
-            SystemMessage(content=p.prosecutor_prompt(jx)),
-            HumanMessage(content=(
-                f"REDIRECT — 1 question to {current_witness}.\n"
-                f"Their direct answers: {direct_qa}\n\n"
-                f"Ask ONE short question (under 20 words) to clarify or rebut "
-                f"something raised during cross-examination. Base it on the case facts.\n"
-                f"Facts:\n{facts}"
-            ))
-        ])
-        transcript.append(AIMessage(content=redirect_q.content, name="Prosecutor"))
-
-        redirect_a = wit_llm.invoke([
-            SystemMessage(content=p.witness_prompt(jx)),
-            HumanMessage(content=(
-                f"You are {current_witness}.\n"
-                f"The prosecution asks (redirect): {redirect_q.content}\n"
-                f"Answer based ONLY on these case facts:\n{facts}"
-            ))
-        ])
-
-        fc = fc_llm.invoke([
-            SystemMessage(content=p.fact_checker_prompt(jx)),
-            HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{redirect_a.content}")
-        ])
-
-        if not fc.content.strip().upper().startswith("PASS"):
-            transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
-            redirect_a = wit_llm.invoke([
-                SystemMessage(content=p.witness_prompt(jx)),
-                HumanMessage(content=(
-                    f"You are {current_witness}.\n"
-                    f"The prosecution asks (redirect): {redirect_q.content}\n"
-                    f"Your previous answer was objected to: {fc.content}\n"
-                    f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
-                ))
-            ])
-            transcript.append(AIMessage(content=redirect_a.content, name="Witness"))
-        else:
-            transcript.append(AIMessage(content=redirect_a.content, name="Witness"))
-
     else:
-        # ── INQUISITORIAL: Judge leads (3 Qs) + counsel follow-ups ──
-        for q_num in range(1, 4):
-            q = judge_llm.invoke([
-                SystemMessage(content=p.judge_prompt(jx)),
-                HumanMessage(content=(
-                    f"JUDICIAL EXAMINATION — Question {q_num} of 3.\n"
-                    f"Witness: {current_witness}.\n"
-                    f"Ask a neutral, fact-finding question.\nCase facts:\n{facts}"
-                ))
-            ])
-            transcript.append(AIMessage(content=f"Q (Judge): {q.content}", name="Judge"))
-
-            a = wit_llm.invoke([
-                SystemMessage(content=p.witness_prompt(jx)),
-                HumanMessage(content=(
-                    f"You are {current_witness}.\n"
-                    f"The Judge asks: {q.content}\n"
-                    f"Answer based ONLY on these case facts:\n{facts}"
-                ))
-            ])
-
-            fc = fc_llm.invoke([
-                SystemMessage(content=p.fact_checker_prompt(jx)),
-                HumanMessage(content=f"Case facts:\n{facts}\n\nWitness answer:\n{a.content}")
-            ])
-
-            if not fc.content.strip().upper().startswith("PASS"):
-                transcript.append(AIMessage(content=fc.content, name="Fact Checker"))
-                a = wit_llm.invoke([
-                    SystemMessage(content=p.witness_prompt(jx)),
-                    HumanMessage(content=(
-                        f"You are {current_witness}.\n"
-                        f"The Judge asks: {q.content}\n"
-                        f"Your previous answer was objected to: {fc.content}\n"
-                        f"Acknowledge the correction and answer correctly based ONLY on these case facts:\n{facts}"
-                    ))
-                ])
-                transcript.append(AIMessage(content=a.content, name="Witness"))
-            else:
-                transcript.append(AIMessage(content=a.content, name="Witness"))
-
-        # ── INQUISITORIAL: Prosecutor follow-up (up to 8 Qs) ────
+        transcript.append(AIMessage(
+            content=f"⚖️ Inquisitorial Witness Examination of {current_witness} — Prosecution supplementary questioning begins.",
+            name="Judge"
+        ))
         transcript.append(AIMessage(
             content=f"Madame/Monsieur le Procureur — any supplementary questions for {current_witness}?",
             name="Judge"
         ))
         transcript.append(AIMessage(content="Oui, Monsieur le Président.", name="Prosecutor"))
+        
+        # ── INQUISITORIAL: Prosecutor follow-up (up to 8 Qs, with objection checks) ──
         _examination_loop(
             examiner_llm=pros_llm,
             examiner_prompt_fn=p.prosecutor_prompt,
@@ -1351,14 +1736,133 @@ def witness_node(state: TrialState) -> dict:
             phase_type="inquisitorial_prosecution",
             max_q=8,
             transcript=transcript,
+            judge_ruling_llm=judge_ruling_llm,
+            objection_log=objection_log,
         )
+        
+    updated_state = {**state, "transcript": state.get("transcript", []) + transcript}
+    clerk_update = _clerk_compression(updated_state)
+    
+    return {
+        "transcript": transcript,
+        "objection_history": objection_log,
+        **clerk_update
+    }
 
-        # ── INQUISITORIAL: Defense follow-up (up to 8 Qs) ──────
+
+def witness_redirect(state: TrialState) -> dict:
+    """
+    Step 3 of Witness Examination:
+    Runs Impeachment + Redirect (adversarial) or Defense follow-up (inquisitorial),
+    then clears current_witness so the router knows to pull the next witness or move to rebuttal.
+    """
+    logger.info("--- WITNESS EXAMINATION: REDIRECT/IMPEACHMENT ---")
+    jx = _get_jx(state)
+    current_witness = state.get("current_witness")
+    if not current_witness:
+        return {}
+        
+    transcript = []
+    facts = state.get("case_description", "")
+    
+    pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
+    def_llm  = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
+    wit_llm  = get_llm(temperature=0.5, model=AGENT_MODELS["Witness"])
+    fc_llm   = get_llm(temperature=0.0, model=AGENT_MODELS["Fact Checker"])
+    judge_ruling_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
+    
+    impeachment_log = list(state.get("impeachment_attempts", []))
+    objection_log = list(state.get("objection_history", []))
+    direct_qa = state.get("witness_direct_qa", [])
+    
+    if jx["cross"]:
+        transcript.append(AIMessage(
+            content=f"⚖️ Witness Examination of {current_witness} — Impeachment and Redirect begins.",
+            name="Judge"
+        ))
+        
+        # ── ADVERSARIAL: Impeachment Question (1 focused Q with objection check) ──
+        try:
+            impeach_q = def_llm.invoke([
+                SystemMessage(content=p.defense_impeachment_prompt(jx)),
+                HumanMessage(content=(
+                    f"IMPEACHMENT — 1 question to {current_witness}.\n"
+                    f"Their direct answers: {direct_qa}\n\n"
+                    f"Ask ONE short question (under 20 words) designed to challenge the witness's "
+                    f"credibility: bias, prior inconsistent statement, bad character for truthfulness, "
+                    f"or inability to observe. Base it on the case facts.\nFacts:\n{facts}"
+                ))
+            ])
+        except Exception as e:
+            logger.error(f"Impeachment question error: {e}")
+            transcript.append(AIMessage(content="[Defense could not formulate an impeachment question]", name="System"))
+        else:
+            transcript.append(AIMessage(content=impeach_q.content, name="Defense Counsel"))
+
+            _ask_with_objection_gate(
+                question_text=impeach_q.content,
+                asking_name="Defense Counsel",
+                opposing_name="Prosecutor",
+                opposing_model=AGENT_MODELS["Prosecutor"],
+                witness_name=current_witness,
+                witness_llm=wit_llm,
+                fc_llm=fc_llm,
+                judge_ruling_llm=judge_ruling_llm,
+                facts=facts,
+                jx=jx,
+                phase_type="impeachment",
+                transcript=transcript,
+                objection_log=objection_log,
+                qa_log=impeachment_log,
+                answer_key="answer",
+                qa_wrapper=True,
+            )
+
+        # ── ADVERSARIAL: Redirect Examination (1 question with objection check) ──
+        try:
+            redirect_q = pros_llm.invoke([
+                SystemMessage(content=p.prosecutor_prompt(jx)),
+                HumanMessage(content=(
+                    f"REDIRECT — 1 question to {current_witness}.\n"
+                    f"Their direct answers: {direct_qa}\n\n"
+                    f"Ask ONE short question (under 20 words) to clarify or rebut "
+                    f"something raised during cross-examination. Base it on the case facts.\n"
+                    f"Facts:\n{facts}"
+                ))
+            ])
+        except Exception as e:
+            logger.error(f"Redirect question error: {e}")
+            transcript.append(AIMessage(content="[Prosecutor could not formulate a redirect question]", name="System"))
+        else:
+            transcript.append(AIMessage(content=redirect_q.content, name="Prosecutor"))
+
+            _ask_with_objection_gate(
+                question_text=redirect_q.content,
+                asking_name="Prosecutor",
+                opposing_name="Defense Counsel",
+                opposing_model=AGENT_MODELS["Defense Counsel"],
+                witness_name=current_witness,
+                witness_llm=wit_llm,
+                fc_llm=fc_llm,
+                judge_ruling_llm=judge_ruling_llm,
+                facts=facts,
+                jx=jx,
+                phase_type="redirect",
+                transcript=transcript,
+                objection_log=objection_log,
+            )
+    else:
+        transcript.append(AIMessage(
+            content=f"⚖️ Inquisitorial Witness Examination of {current_witness} — Defence supplementary questioning begins.",
+            name="Judge"
+        ))
         transcript.append(AIMessage(
             content=f"Maître — any supplementary questions for {current_witness}?",
             name="Judge"
         ))
         transcript.append(AIMessage(content="Oui, Monsieur le Président.", name="Defense Counsel"))
+        
+        # ── INQUISITORIAL: Defense follow-up (up to 8 Qs, with objection checks) ──
         _examination_loop(
             examiner_llm=def_llm,
             examiner_prompt_fn=p.defense_prompt,
@@ -1371,16 +1875,20 @@ def witness_node(state: TrialState) -> dict:
             phase_type="inquisitorial_defense",
             max_q=8,
             transcript=transcript,
+            judge_ruling_llm=judge_ruling_llm,
+            objection_log=objection_log,
         )
 
+    # Examination of current witness complete — clear current_witness
     updated_state = {**state, "transcript": state.get("transcript", []) + transcript}
     clerk_update = _clerk_compression(updated_state)
+    
     return {
-        "witness_queue": witness_queue,
-        "current_witness": current_witness,
+        "current_witness": None,
+        "witness_direct_qa": [],
         "transcript": transcript,
-        "expert_witnesses": expert_witnesses,
         "impeachment_attempts": impeachment_log,
+        "objection_history": objection_log,
         **clerk_update
     }
 

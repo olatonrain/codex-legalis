@@ -2078,7 +2078,9 @@ const STEP_LABELS = {
   "motions":           "Pre-Trial Motions",
   "opening":           "Opening Statements",
   "evidence":          "Evidence Presentation",
-  "witness":           "Witness Examination",
+  "witness_direct":    "Witness Direct Examination",
+  "witness_cross":     "Witness Cross-Examination",
+  "witness_redirect":  "Witness Redirect & Impeachment",
   "rebuttal":          "Rebuttal Evidence",
   "closing":           "Closing Arguments",
   "jury_instructions": "Jury Instructions",
@@ -2088,7 +2090,7 @@ const STEP_LABELS = {
 };
 
 function updateLiveProgress() {
-  const STEPS = ["discovery", "motions", "opening", "evidence", "witness", "rebuttal", "closing", "jury_instructions", "jury_deliberation", "shadow_jury", "sentencing"];
+  const STEPS = ["discovery", "motions", "opening", "evidence", "witness_direct", "witness_cross", "witness_redirect", "rebuttal", "closing", "jury_instructions", "jury_deliberation", "shadow_jury", "sentencing"];
   const idx   = STEPS.indexOf(State.liveStep);
   const label = STEP_LABELS[State.liveStep] || State.liveStep;
   const pct   = idx >= 0 ? Math.round(((idx + 1) / STEPS.length) * 100) : 0;

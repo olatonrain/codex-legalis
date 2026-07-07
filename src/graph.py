@@ -10,7 +10,9 @@ from src.nodes import (
     motion_practice_node,
     opening_statements_node,
     evidence_node,
-    witness_node,
+    witness_direct,
+    witness_cross,
+    witness_redirect,
     rebuttal_evidence_node,
     closing_arguments_node,
     jury_instructions_node,
@@ -32,7 +34,9 @@ workflow.add_node("human_input", human_input_node)
 workflow.add_node("motions", motion_practice_node)
 workflow.add_node("opening_statements", opening_statements_node)
 workflow.add_node("evidence", evidence_node)
-workflow.add_node("witness_examination", witness_node)
+workflow.add_node("witness_direct", witness_direct)
+workflow.add_node("witness_cross", witness_cross)
+workflow.add_node("witness_redirect", witness_redirect)
 workflow.add_node("rebuttal_evidence", rebuttal_evidence_node)
 workflow.add_node("closing_arguments", closing_arguments_node)
 workflow.add_node("jury_instructions", jury_instructions_node)
@@ -51,9 +55,9 @@ def check_security(state: TrialState) -> Literal["magistrate", "archivist"]:
     return "magistrate"
 
 
-def check_more_witnesses(state: TrialState) -> Literal["witness_examination", "rebuttal_evidence"]:
-    if len(state.get("witness_queue", [])) > 0:
-        return "witness_examination"
+def check_has_witnesses(state: TrialState) -> Literal["witness_direct", "rebuttal_evidence"]:
+    if len(state.get("witness_queue", [])) > 0 or state.get("current_witness"):
+        return "witness_direct"
     return "rebuttal_evidence"
 
 def check_closing(state: TrialState) -> Literal["jury_instructions", "shadow_jury"]:
@@ -88,14 +92,25 @@ workflow.add_edge("discovery", "human_input")
 workflow.add_edge("human_input", "motions")
 workflow.add_edge("motions", "opening_statements")
 workflow.add_edge("opening_statements", "evidence")
-workflow.add_edge("evidence", "witness_examination")
 
-# Witness Loop → Rebuttal Evidence
+# Evidence conditional branch
 workflow.add_conditional_edges(
-    "witness_examination",
-    check_more_witnesses,
+    "evidence",
+    check_has_witnesses,
     {
-        "witness_examination": "witness_examination",
+        "witness_direct": "witness_direct",
+        "rebuttal_evidence": "rebuttal_evidence"
+    }
+)
+
+# Witness Loop: Direct -> Cross -> Redirect -> Check more
+workflow.add_edge("witness_direct", "witness_cross")
+workflow.add_edge("witness_cross", "witness_redirect")
+workflow.add_conditional_edges(
+    "witness_redirect",
+    check_has_witnesses,
+    {
+        "witness_direct": "witness_direct",
         "rebuttal_evidence": "rebuttal_evidence"
     }
 )

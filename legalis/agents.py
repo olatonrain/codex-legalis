@@ -170,9 +170,10 @@ def generate_dramatic_opening(
 # ── Live Trial Step Runner ────────────────────────────────────────────────────
 
 _LIVE_STEPS = [
-    "discovery", "motions", "opening", "evidence", "witness", "rebuttal",
-    "closing", "jury_instructions", "jury_deliberation", "shadow_jury",
-    "sentencing", "reporter",
+    "discovery", "motions", "opening", "evidence",
+    "witness_direct", "witness_cross", "witness_redirect",
+    "rebuttal", "closing", "jury_instructions", "jury_deliberation",
+    "shadow_jury", "sentencing", "reporter",
 ]
 
 _STEP_LABELS = {
@@ -180,7 +181,9 @@ _STEP_LABELS = {
     "motions":           "Pre-Trial Motions",
     "opening":           "Opening Statements",
     "evidence":          "Evidence Presentation",
-    "witness":           "Witness Examination",
+    "witness_direct":    "Witness Direct Examination",
+    "witness_cross":     "Witness Cross-Examination",
+    "witness_redirect":  "Witness Redirect & Impeachment",
     "rebuttal":          "Rebuttal Evidence",
     "closing":           "Closing Arguments",
     "jury_instructions": "Jury Instructions",
@@ -202,7 +205,8 @@ def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict,
     """
     from src.nodes import (
         discovery_node, motion_practice_node,
-        opening_statements_node, evidence_node, witness_node,
+        opening_statements_node, evidence_node,
+        witness_direct, witness_cross, witness_redirect,
         rebuttal_evidence_node, closing_arguments_node,
         jury_instructions_node, jury_deliberation_node,
         shadow_jury_node, sentencing_node, reporter_node,
@@ -213,7 +217,9 @@ def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict,
         "motions":           motion_practice_node,
         "opening":           opening_statements_node,
         "evidence":          evidence_node,
-        "witness":           witness_node,
+        "witness_direct":    witness_direct,
+        "witness_cross":     witness_cross,
+        "witness_redirect":  witness_redirect,
         "rebuttal":          rebuttal_evidence_node,
         "closing":           closing_arguments_node,
         "jury_instructions": jury_instructions_node,
@@ -311,9 +317,13 @@ def _next_step_after(live_step: str, graph_state: dict) -> str:
     elif live_step == "opening":
         return "evidence"
     elif live_step == "evidence":
-        return "witness" if wq else "rebuttal"
-    elif live_step == "witness":
-        return "witness" if wq else "rebuttal"
+        return "witness_direct" if (wq or graph_state.get("current_witness")) else "rebuttal"
+    elif live_step == "witness_direct":
+        return "witness_cross"
+    elif live_step == "witness_cross":
+        return "witness_redirect"
+    elif live_step == "witness_redirect":
+        return "witness_direct" if wq else "rebuttal"
     elif live_step == "rebuttal":
         return "closing"
     elif live_step == "closing":

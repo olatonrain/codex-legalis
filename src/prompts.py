@@ -214,6 +214,8 @@ def defense_objection_prompt(jx: dict) -> str:
 
 {_jx_block(jx)}
 
+IMPORTANT: You are objecting strictly to the ADMISSIBILITY of evidence, not arguing the case. Only object if the evidence violates a rule of admissibility under {jx['evidence_rules']}. If the evidence is factually unfavorable to your side but otherwise legally admissible, do NOT object — save your arguments for cross-examination and closing.
+
 You must raise ONE specific, well-founded objection. Choose from: {', '.join(_OBJECTION_TYPES)}.
 Cite the precise rule from: {jx['evidence_rules']}.
 
@@ -221,6 +223,8 @@ If objecting as 'hearsay', you must also identify which hearsay exception does N
 If objecting as 'relevance', explain why the evidence does not make a material fact more or less probable.
 If objecting as 'speculation', explain what foundation the witness lacks.
 If objecting as 'prejudice', explain how the probative value is substantially outweighed by unfair prejudice.
+
+Your objection must address a specific admissibility defect. Do not use objections as a vehicle for case arguments.
 
 Return ONLY a valid JSON object with keys: objection_type, rule_cited, rationale.
 Do not use Markdown, bullet points, or stage directions."""
@@ -231,6 +235,8 @@ def prosecution_objection_prompt(jx: dict) -> str:
 
 {_jx_block(jx)}
 
+IMPORTANT: You are objecting strictly to the ADMISSIBILITY of evidence, not arguing the case. Only object if the evidence violates a rule of admissibility under {jx['evidence_rules']}. If the evidence is factually unfavorable to your side but otherwise legally admissible, do NOT object — save your arguments for cross-examination and closing.
+
 You must raise ONE specific, well-founded objection. Choose from: {', '.join(_OBJECTION_TYPES)}.
 Cite the precise rule from: {jx['evidence_rules']}.
 
@@ -239,8 +245,42 @@ If objecting as 'hearsay', identify which hearsay exception does NOT apply.
 If objecting as 'foundation', explain what authentication step is missing.
 If objecting as 'character', cite the character evidence prohibition under {jx['evidence_rules']}.
 
+Your objection must address a specific admissibility defect. Do not use objections as a vehicle for case arguments.
+
 Return ONLY a valid JSON object with keys: objection_type, rule_cited, rationale.
 Do not use Markdown, bullet points, or stage directions."""
+
+
+def examination_objection_prompt(jx: dict, opposing_name: str, phase_type: str) -> str:
+    """Prompt for opposing counsel deciding whether to object during witness examination."""
+    is_leading_allowed = phase_type in ("cross",)
+    return f"""You are {opposing_name} monitoring the opposing counsel's examination of a witness in a {jx['country']} {jx['case_type'].lower()} court.
+
+{_jx_block(jx)}
+
+You are watching the opposing side's questions to the witness. You MAY object if the question violates the rules of evidence under {jx['evidence_rules']}.
+
+VALID GROUNDS FOR OBJECTION DURING WITNESS EXAMINATION:
+- leading: The question suggests the answer{". LEADING QUESTIONS ARE PROHIBITED during this examination phase — object immediately if you see one." if not is_leading_allowed else ". Leading questions ARE permitted during cross-examination — do NOT object on this ground."}
+- hearsay: The question asks the witness to relate an out-of-court statement for its truth
+- speculation: The question asks the witness to guess or speculate beyond their personal knowledge
+- compound: The question contains multiple questions rolled together
+- relevance: The question has no bearing on the material facts at issue
+- foundation: The witness lacks personal knowledge to answer the question
+- argumentative: The question argues with the witness rather than asking for facts
+- asked_and_answered: The question has already been asked and answered
+- narrative: The question invites a long, rambling narrative response
+- badgering: The question is harassing, repetitive, or overly aggressive
+
+STRATEGIC GUIDANCE:
+- Only object if there is a CLEAR, well-founded violation of the evidence rules.
+- Do NOT object just because the answer will be unfavorable to your side.
+- If the question is proper and admissible, set should_object to false — do not obstruct.
+- A frivolous objection undermines your credibility with the judge.
+- Frequency check: In real courts, objections are raised only when absolutely necessary (typically 10-15% of the time). If the question is mostly fine or just slightly conversational, do NOT object. Be professional and sparing with objections.
+- If you object, cite the specific rule and provide a concise legal rationale.
+
+Return ONLY a valid JSON object. If you choose not to object, set should_object to false and leave the other fields empty."""
 
 
 def defense_impeachment_prompt(jx: dict) -> str:
