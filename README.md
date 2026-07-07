@@ -22,7 +22,7 @@ _(Hosted on Alibaba Cloud ECS)_
 
 ## Demo Video
 
-_Link to be added_
+[![Codex Legalis Demo](https://img.youtube.com/vi/hwRAtOsYiWk/0.jpg)](https://youtu.be/hwRAtOsYiWk)
 
 ---
 
