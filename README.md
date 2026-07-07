@@ -14,21 +14,21 @@
 
 ## Live Demo
 
-**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000)
+**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalis.vercel.app/](https://codex-legalis.vercel.app/)
 
-*(Hosted on Alibaba Cloud ECS)*
+_(Hosted on Alibaba Cloud ECS)_
 
 ---
 
 ## Demo Video
 
-*Link to be added*
+_Link to be added_
 
 ---
 
 ## Blog Post
 
-*Link to be added*
+_Link to be added_
 
 ---
 
@@ -50,13 +50,13 @@ Open [http://localhost:8000](http://localhost:8000).
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/ARCHITECTURE.md) | System diagram, tech stack, agent roles, trial phases |
-| [Deployment](docs/DEPLOYMENT.md) | Alibaba Cloud proof, Qwen Cloud config, compliance |
-| [Benchmark](docs/BENCHMARK.md) | Raw LLM vs Single-Agent vs Codex Legalis comparison |
-| [Usage](docs/USAGE.md) | How to run trials, demo cases, file upload, API reference |
-| [Safety](docs/SAFETY.md) | Anti-hallucination, prompt injection defence, record gates |
+| Document                             | Description                                                |
+| ------------------------------------ | ---------------------------------------------------------- |
+| [Architecture](docs/ARCHITECTURE.md) | System diagram, tech stack, agent roles, trial phases      |
+| [Deployment](docs/DEPLOYMENT.md)     | Alibaba Cloud proof, Qwen Cloud config, compliance         |
+| [Benchmark](docs/BENCHMARK.md)       | Raw LLM vs Single-Agent vs Codex Legalis comparison        |
+| [Usage](docs/USAGE.md)               | How to run trials, demo cases, file upload, API reference  |
+| [Safety](docs/SAFETY.md)             | Anti-hallucination, prompt injection defence, record gates |
 
 ---
 

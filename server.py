@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Dict, List
 from collections import defaultdict
 
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, SystemMessage
 
 try:
     from dotenv import load_dotenv
@@ -101,7 +101,10 @@ async def rate_limit_middleware(request: Request, call_next):
         t for t in _rate_limit_store[client_ip] if t > window_start
     ]
 
-    if len(_rate_limit_store[client_ip]) >= RATE_LIMIT_MAX:
+    if not _rate_limit_store[client_ip]:
+        del _rate_limit_store[client_ip]
+
+    if client_ip in _rate_limit_store and len(_rate_limit_store[client_ip]) >= RATE_LIMIT_MAX:
         return JSONResponse(
             status_code=429,
             content={"detail": "Rate limit exceeded. Try again later."}
@@ -405,16 +408,23 @@ def trial_start(req: TrialStartRequest):
 
 
 def _deserialize_transcript(entries: list) -> list[BaseMessage]:
-    """Restore AIMessage objects from dict transcript entries.
+    """Restore BaseMessage objects from dict transcript entries.
     Keeps the server-side state with real BaseMessage objects
     while the wire format uses plain dicts.
     """
+    _type_map = {
+        "human": HumanMessage,
+        "system": SystemMessage,
+        "ai": AIMessage,
+    }
     result: list[BaseMessage] = []
     for msg in entries:
-        if isinstance(msg, AIMessage):
+        if isinstance(msg, BaseMessage):
             result.append(msg)
         elif isinstance(msg, dict):
-            result.append(AIMessage(
+            msg_type = msg.get("type", "ai").lower()
+            cls = _type_map.get(msg_type, AIMessage)
+            result.append(cls(
                 content=msg.get("content", ""),
                 name=msg.get("name") or msg.get("agent") or "System",
             ))
@@ -432,7 +442,13 @@ def _serialize_transcript(entries: list) -> list[dict]:
         if isinstance(msg, dict):
             serialized.append(msg)
         else:
+            type_name = "ai"
+            if isinstance(msg, HumanMessage):
+                type_name = "human"
+            elif isinstance(msg, SystemMessage):
+                type_name = "system"
             serialized.append({
+                "type": type_name,
                 "name": getattr(msg, "name", None) or "System",
                 "content": getattr(msg, "content", str(msg)),
             })
@@ -543,12 +559,13 @@ def submit_human_question(req: HumanQuestionRequest):
 @app.post("/api/trial/human_answer")
 def submit_human_answer(req: HumanAnswerRequest):
     """Human submits an answer to an agent's question."""
+    if detect_prompt_injection(req.answer):
+        raise HTTPException(400, "[CONTEMPT OF COURT] Prompt injection detected in human answer.")
     try:
         pending = req.graph_state.get("pending_human_question", {})
         if not pending:
             raise HTTPException(400, "No pending question to answer")
         
-        # Record the Q&A in the human input buffer
         if "human_input_buffer" not in req.graph_state:
             req.graph_state["human_input_buffer"] = []
         req.graph_state["human_input_buffer"].append({
@@ -558,7 +575,6 @@ def submit_human_answer(req: HumanAnswerRequest):
             "context": pending.get("context", ""),
         })
         
-        # Clear the pending question
         req.graph_state["pending_human_question"] = None
         
         return {"status": "answer_recorded", "graph_state": req.graph_state}

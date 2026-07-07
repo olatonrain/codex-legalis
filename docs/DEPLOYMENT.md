@@ -93,11 +93,12 @@ The `openai` and `langchain-openai` packages are used exclusively as the compati
 
 Codex Legalis is currently deployed and running live on an Alibaba Cloud ECS instance.
 
-- **Live URL:** [http://47.237.180.168:8000](http://47.237.180.168:8000)
+- **Live URL:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalis.vercel.app/](https://codex-legalis.vercel.app/)
 - **Deployment Method:** Docker container running on Ubuntu 24.04 (Alibaba ECS)
 - **Instance IP:** `47.237.180.168`
 
 To update the live deployment after pushing new code, we use our automated Docker deployment script on the server:
+
 ```bash
 ./deploy-docker.sh
 ```

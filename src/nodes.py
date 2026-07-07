@@ -10,9 +10,13 @@ import re
 import random
 import uuid
 import json
+import threading
 from pathlib import Path
 
 logger = get_logger(__name__)
+
+_no_objection_lock = threading.Lock()
+_no_objection_counter: dict[str, int] = {}
 
 # ── Pydantic Output Schemas ───────────────────────────────────────────────────
 
@@ -1426,11 +1430,9 @@ def _examination_loop(
                 logger.error(f"Opposing counsel objection check error in {phase_type}: {e}")
 
             if not obj.should_object:
-                # Track silent-pass counts for counsel aggressiveness monitoring
-                if not hasattr(_examination_loop, '_no_objection_counter'):
-                    _examination_loop._no_objection_counter = {}
                 key = f"{phase_type}_{opposing_name}"
-                _examination_loop._no_objection_counter[key] = _examination_loop._no_objection_counter.get(key, 0) + 1
+                with _no_objection_lock:
+                    _no_objection_counter[key] = _no_objection_counter.get(key, 0) + 1
 
             if obj.should_object:
                 logger.info(f"[OBJECTION] {opposing_name} objects during {phase_type}: {obj.objection_type} — Q: {content[:60]}...")
@@ -1510,7 +1512,7 @@ def _examination_loop(
             logger.error(f"Witness LLM error in {phase_type} Q{q_num}: {e}")
             transcript.append(AIMessage(content="[Witness could not respond — continuing]", name="System"))
             q_num += 1
-            continued_in_a_row = 0
+            sustained_in_a_row = 0
             continue
 
         try:
@@ -1626,19 +1628,6 @@ def _extract_witness_context(witness_name: str, case_description: str) -> str:
         f"{role_hint}Focus your examination on the following case facts relevant to {witness_name} "
         f"and their stated role. Do NOT ask about topics that another witness is better positioned to address:\n\n{context}"
     )
-    """Extract the defendant's full name from the case description."""
-    if not case_description:
-        return ""
-    desc = case_description[:500]  # First 500 chars usually contain the defendant intro
-    patterns = [
-        r'(?:The\s+)?defendant\s*,?\s*((?:[A-Z][a-zà-ü]+(?:\s+(?:[A-Z][a-zà-ü]+|de\s+[A-Z][a-zà-ü]+|van\s+[A-Z][a-zà-ü]+|von\s+[A-Z][a-zà-ü]+))+))',
-        r'((?:[A-Z][a-zà-ü]+(?:\s+(?:[A-Z][a-zà-ü]+|de\s+[A-Z][a-zà-ü]+|van\s+[A-Z][a-zà-ü]+|von\s+[A-Z][a-zà-ü]+))+))\s*,?\s*(?:aged\s+\d+|is\s+charged|stands\s+charged)',
-    ]
-    for pattern in patterns:
-        m = re.search(pattern, desc)
-        if m:
-            return m.group(1).strip()
-    return ""
 
 
 def witness_direct(state: TrialState) -> dict:
@@ -1727,7 +1716,9 @@ def witness_direct(state: TrialState) -> dict:
         },
     }
     # Use secular oath for civil law / inquisitorial systems
-    oath = oath_phrases["secular"] if jx["system"] in ("Civil Law", "Islamic Law") else oath_phrases["judeo_christian"]
+    is_islamic = "Islamic" in jx["system"]
+    is_civil = "Civil Law" in jx["system"]
+    oath = oath_phrases["secular"] if (is_civil or is_islamic) else oath_phrases["judeo_christian"]
     court_address = jx["address"].split(";")[0].strip()
     transcript.append(AIMessage(
         content=f"The Clerk administers the oath to {current_witness}.",
@@ -2123,9 +2114,15 @@ def closing_arguments_node(state: TrialState) -> dict:
             ])
             transcript.append(AIMessage(content=f"Ruling on No-Case Submission: {ruling.ruling}. {_strip_ruling_preamble(ruling.rationale, ruling.ruling)}", name="Judge"))
             if ruling.ruling == "SUSTAINED":
-                # Early termination
-                transcript.append(AIMessage(content="The case is dismissed. The defendant is acquitted.", name="Judge"))
-                return {"transcript": transcript, "main_verdict": "Not Guilty"}
+                case_type = jx.get("case_type", "Criminal")
+                early_verdict = "Not Guilty" if case_type == "Criminal" else "Not Liable"
+                dismiss_msg = (
+                    "The case is dismissed. The defendant is acquitted."
+                    if case_type == "Criminal"
+                    else "The case is dismissed. The defendant is found not liable."
+                )
+                transcript.append(AIMessage(content=dismiss_msg, name="Judge"))
+                return {"transcript": transcript, "main_verdict": early_verdict}
 
         pros_llm = get_llm(temperature=0.7, model=AGENT_MODELS["Prosecutor"])
         pros_msg = pros_llm.invoke([

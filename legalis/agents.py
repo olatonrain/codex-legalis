@@ -202,11 +202,15 @@ def _bailiff_transition(next_step: str, graph_state: dict) -> str:
     next_witness = wq[0] if wq else None
 
     # Witness phases: include witness name
-    if next_step == "witness_direct" and (current_witness or next_witness):
-        name = current_witness or next_witness
+    if next_step == "witness_direct" and current_witness:
         return (
-            f"The court will now proceed to the direct examination of {name}. "
+            f"The court will now proceed to the direct examination of {current_witness}. "
             f"Counsel, please proceed."
+        )
+    elif next_step == "witness_direct" and not current_witness and next_witness:
+        return (
+            f"The examination of the previous witness is complete. "
+            f"The court will now call {next_witness} for direct examination."
         )
     elif next_step == "witness_cross" and current_witness:
         return (
@@ -217,14 +221,6 @@ def _bailiff_transition(next_step: str, graph_state: dict) -> str:
         return (
             f"The court will now proceed to redirect and impeachment for {current_witness}. "
             f"Prosecution, you may proceed."
-        )
-    # After redirect, if more witnesses remain, announce completion and next witness
-    elif next_step == "witness_direct" and not current_witness and next_witness:
-        wq = graph_state.get("witness_queue", [])
-        total_remaining = len(wq)
-        return (
-            f"The examination of the previous witness is complete. "
-            f"The court will now call {next_witness} for direct examination."
         )
     elif next_step == "evidence":
         admitted = graph_state.get("admitted_evidence", [])
