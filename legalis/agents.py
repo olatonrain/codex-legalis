@@ -194,6 +194,71 @@ _STEP_LABELS = {
 }
 
 
+def _bailiff_transition(next_step: str, graph_state: dict) -> str:
+    """Generate a personalised Bailiff announcement for the next trial phase."""
+    next_label = _STEP_LABELS.get(next_step, next_step)
+    current_witness = graph_state.get("current_witness")
+    wq = graph_state.get("witness_queue", [])
+    next_witness = wq[0] if wq else None
+
+    # Witness phases: include witness name
+    if next_step == "witness_direct" and (current_witness or next_witness):
+        name = current_witness or next_witness
+        return (
+            f"The court will now proceed to the direct examination of {name}. "
+            f"Counsel, please proceed."
+        )
+    elif next_step == "witness_cross" and current_witness:
+        return (
+            f"The court will now proceed to the cross-examination of {current_witness}. "
+            f"Defence counsel, you may begin."
+        )
+    elif next_step == "witness_redirect" and current_witness:
+        return (
+            f"The court will now proceed to redirect and impeachment for {current_witness}. "
+            f"Prosecution, you may proceed."
+        )
+    # After redirect, if more witnesses remain, announce completion and next witness
+    elif next_step == "witness_direct" and not current_witness and next_witness:
+        wq = graph_state.get("witness_queue", [])
+        total_remaining = len(wq)
+        return (
+            f"The examination of the previous witness is complete. "
+            f"The court will now call {next_witness} for direct examination."
+        )
+    elif next_step == "evidence":
+        admitted = graph_state.get("admitted_evidence", [])
+        n = len(admitted)
+        return (
+            f"The court will now proceed to the presentation of evidence. "
+            f"{n} item{'s' if n != 1 else ''} currently on record."
+        )
+    elif next_step == "done":
+        return "All matters have been heard. The court will now adjourn."
+    else:
+        return f"The court will now proceed to the {next_label.lower()}."
+
+
+def _phase_opening(live_step: str, graph_state: dict) -> str:
+    """Generate a personalised opening line for the current phase."""
+    phase_label = _STEP_LABELS.get(live_step, live_step)
+    current_witness = graph_state.get("current_witness")
+
+    if live_step == "witness_direct" and current_witness:
+        return f"The court is now in session for the direct examination of {current_witness}."
+    elif live_step == "witness_cross" and current_witness:
+        return f"The court is now in session for the cross-examination of {current_witness}."
+    elif live_step == "witness_redirect" and current_witness:
+        return f"The court is now in session for the redirect examination of {current_witness}."
+    elif live_step == "evidence":
+        return (
+            f"The court is now in session for evidence presentation. "
+            f"Each side may tender exhibits in turn."
+        )
+    else:
+        return f"The court is now in session for the {phase_label.lower()}."
+
+
 def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict, str]:
     """
     Execute one phase of the live LLM-powered trial.
@@ -243,12 +308,10 @@ def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict,
         next_step = _next_step_after(live_step, graph_state)
         messages = [{"agent": "System", "text": error_text, "phase": phase_label}]
 
+        transition = _bailiff_transition(next_step, graph_state)
+        messages.append({"agent": "Bailiff", "text": transition, "phase": phase_label})
         if next_step == "done":
-            messages.append({"agent": "Bailiff", "text": f"All matters in this phase have been heard. The court will now adjourn.", "phase": phase_label})
             messages.append({"agent": "Bailiff", "text": "This court is adjourned.", "phase": "done"})
-        else:
-            next_label = _STEP_LABELS.get(next_step, next_step)
-            messages.append({"agent": "Bailiff", "text": f"The court will now proceed to the {next_label.lower()}.", "phase": phase_label})
 
         return messages, graph_state, next_step
 
@@ -258,7 +321,7 @@ def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict,
 
     messages.append({
         "agent": "Bailiff",
-        "text": f"The court is now in session for the {phase_label.lower()}.",
+        "text": _phase_opening(live_step, graph_state),
         "phase": phase_label,
     })
 
@@ -282,23 +345,17 @@ def run_trial_step(live_step: str, graph_state: dict) -> tuple[list[dict], dict,
 
     next_step = _next_step_after(live_step, graph_state)
 
+    transition = _bailiff_transition(next_step, graph_state)
+    messages.append({
+        "agent": "Bailiff",
+        "text": transition,
+        "phase": phase_label,
+    })
     if next_step == "done":
-        messages.append({
-            "agent": "Bailiff",
-            "text": "All matters have been heard. The court will now adjourn.",
-            "phase": phase_label,
-        })
         messages.append({
             "agent": "Bailiff",
             "text": "This court is adjourned.",
             "phase": "done",
-        })
-    else:
-        next_label = _STEP_LABELS.get(next_step, next_step)
-        messages.append({
-            "agent": "Bailiff",
-            "text": f"The court will now proceed to the {next_label.lower()}.",
-            "phase": phase_label,
         })
 
     return messages, graph_state, next_step

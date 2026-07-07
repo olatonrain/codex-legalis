@@ -28,9 +28,10 @@ class ClerkOutput(BaseModel):
     excluded_evidence: list[str] = Field(description="Excluded evidence items (inadmissible).")
 
 class JudgeRuling(BaseModel):
-    ruling: str = Field(description="Must be exactly 'SUSTAINED' or 'OVERRULED'.")
+    ruling: str = Field(description="Must be exactly 'SUSTAINED' or 'OVERRULED' or 'SUSTAINED IN PART'.")
     rationale: str = Field(default="", description="Legal basis for the ruling, citing the specific rule of evidence.")
     objection_type: str = Field(default="", description="The type of objection raised (e.g. hearsay, relevance, speculation, leading, foundation, etc.).")
+    limiting_instruction: str = Field(default="", description="If the ruling is partial (SUSTAINED IN PART), provide a limiting instruction specifying what part is admissible and for what limited purpose. Empty string if not needed.")
 
 class ObjectionOutput(BaseModel):
     objection_type: str = Field(description="The specific type of objection: hearsay, relevance, speculation, leading, compound, foundation, narrative, privilege, character, prejudice, best_evidence, authentication, or cumulative.")
@@ -48,6 +49,7 @@ class EvidenceObjectionDecision(BaseModel):
     objection_type: str = Field(default="", description="The specific type of objection if should_object is True: hearsay, relevance, speculation, foundation, privilege, character, prejudice, best_evidence, authentication, or cumulative.")
     rule_cited: str = Field(default="", description="The specific rule from the governing evidence rules — required only if should_object is True.")
     rationale: str = Field(default="", description="Brief explanation of the admissibility defect — required only if should_object is True.")
+    foundation_missing: str = Field(default="", description="If foundation is the objection, specify exactly what foundation step is missing (e.g. 'no chain of custody', 'witness cannot identify the document', 'no business records certification').")
 
 class JuryVerdict(BaseModel):
     verdict: str = Field(description="'Guilty', 'Not Guilty', 'Liable', or 'Not Liable'.")
@@ -652,7 +654,10 @@ def _judge_rule_on_objection(judge_llm, jx: dict, evidence: str, objection: Obje
             f"Rule cited: {objection.rule_cited}\n"
             f"Rationale: {objection.rationale}{exception_block}\n\n"
             f"Rule on this objection under {jx['evidence_rules']}. If the objection is 'hearsay' and a valid "
-            f"exception was argued, OVERRULE. Return a JSON object."
+            f"exception was argued, OVERRULE."
+            f"If the evidence is admissible for one purpose but not another (e.g. not for the truth of the matter but for showing notice or state of mind), "
+            f"rule 'SUSTAINED IN PART' and provide a limiting_instruction specifying exactly what use is permissible."
+            f"Return a JSON object with ruling, rationale, objection_type, and limiting_instruction (empty string if not needed)."
         ))
     ])
     return result
@@ -682,8 +687,13 @@ def evidence_node(state: TrialState) -> dict:
     pros_ev = pros_llm.invoke([
         SystemMessage(content=p.prosecutor_prompt(jx)),
         HumanMessage(content=(
-            f"Present ONE piece of evidence in 40 words or fewer. Name it, describe it briefly, "
-            f"and state why it's admissible under {jx['evidence_rules']}.\n"
+            f"Present ONE piece of evidence in 40 words or fewer.\n"
+            f"For EACH exhibit you MUST include AUTHENTICATION: name the exhibit by its letter, "
+            f"state who created/received/maintained it, how it was obtained, and whether it is a "
+            f"business record, direct observation, or other admissible form.\n"
+            f"Example: 'The prosecution tenders Exhibit D, an internal email from X to Y dated Z, "
+            f"obtained from the company server and identified by the IT custodian. It is a business record.'\n"
+            f"Ground every detail in the case facts. Do NOT invent dates or names not in the facts.\n"
             f"Case facts:\n{facts}"
         ))
     ])
@@ -740,6 +750,8 @@ def evidence_node(state: TrialState) -> dict:
             "ruling_rationale": ruling1.rationale,
         })
         ruling1_text = f"The objection is {ruling1.ruling}." + (f" {_strip_ruling_preamble(ruling1.rationale, ruling1.ruling)}" if ruling1.rationale else "")
+        if ruling1.limiting_instruction:
+            ruling1_text += f" Limiting instruction: {ruling1.limiting_instruction}"
         transcript.append(AIMessage(content=ruling1_text, name="Judge"))
     else:
         # No objection — evidence stands without challenge
@@ -752,8 +764,11 @@ def evidence_node(state: TrialState) -> dict:
     def_ev = def_llm.invoke([
         SystemMessage(content=p.defense_prompt(jx)),
         HumanMessage(content=(
-            f"Present ONE piece of evidence for the defence in 40 words or fewer. "
-            f"Name it and state why it's admissible under {jx['evidence_rules']}.\n"
+            f"Present ONE piece of evidence for the defence in 40 words or fewer.\n"
+            f"For EACH exhibit you MUST include AUTHENTICATION: name the exhibit by its letter, "
+            f"state who created/received/maintained it, how it was obtained, and whether it is a "
+            f"business record, direct observation, or other admissible form.\n"
+            f"Ground every detail in the case facts. Do NOT invent details.\n"
             f"Case facts:\n{facts}"
         ))
     ])
@@ -810,6 +825,8 @@ def evidence_node(state: TrialState) -> dict:
             "ruling_rationale": ruling2.rationale,
         })
         ruling2_text = f"The objection is {ruling2.ruling}." + (f" {_strip_ruling_preamble(ruling2.rationale, ruling2.ruling)}" if ruling2.rationale else "")
+        if ruling2.limiting_instruction:
+            ruling2_text += f" Limiting instruction: {ruling2.limiting_instruction}"
         transcript.append(AIMessage(content=ruling2_text, name="Judge"))
     else:
         transcript.append(AIMessage(
@@ -1237,6 +1254,8 @@ def _ask_with_objection_gate(
                 f" {_strip_ruling_preamble(ruling.rationale, ruling.ruling)}"
                 if ruling.rationale else ""
             )
+            if getattr(ruling, 'limiting_instruction', ''):
+                ruling_text += f" Limiting instruction: {ruling.limiting_instruction}"
             transcript.append(AIMessage(content=ruling_text, name="Judge"))
 
             if ruling.ruling.upper() == "SUSTAINED":
@@ -1406,7 +1425,15 @@ def _examination_loop(
             except Exception as e:
                 logger.error(f"Opposing counsel objection check error in {phase_type}: {e}")
 
+            if not obj.should_object:
+                # Track silent-pass counts for counsel aggressiveness monitoring
+                if not hasattr(_examination_loop, '_no_objection_counter'):
+                    _examination_loop._no_objection_counter = {}
+                key = f"{phase_type}_{opposing_name}"
+                _examination_loop._no_objection_counter[key] = _examination_loop._no_objection_counter.get(key, 0) + 1
+
             if obj.should_object:
+                logger.info(f"[OBJECTION] {opposing_name} objects during {phase_type}: {obj.objection_type} — Q: {content[:60]}...")
                 transcript.append(AIMessage(
                     content=f"Objection — {obj.objection_type.upper()}. {obj.rule_cited}: {obj.rationale}",
                     name=opposing_name,
@@ -1448,6 +1475,8 @@ def _examination_loop(
                     f" {_strip_ruling_preamble(ruling.rationale, ruling.ruling)}"
                     if ruling.rationale else ""
                 )
+                if getattr(ruling, 'limiting_instruction', ''):
+                    ruling_text += f" Limiting instruction: {ruling.limiting_instruction}"
                 transcript.append(AIMessage(content=ruling_text, name="Judge"))
 
                 if ruling.ruling.upper() == "SUSTAINED":
@@ -1523,6 +1552,95 @@ def _examination_loop(
     return qa_log
 
 
+def _is_defendant_witness(witness_name: str, case_description: str) -> bool:
+    """Check if the witness being called is the defendant/accused in the case facts."""
+    if not witness_name or not case_description:
+        return False
+    name_parts = witness_name.lower().split()
+    desc_lower = case_description.lower()
+    # The defendant's name typically appears near "defendant", "the accused", or "charged with"
+    defendant_patterns = [
+        r'(?:the\s+)?defendant\s*,?\s*' + re.escape(witness_name)[:40],
+        r'(?:the\s+)?accused\s*,?\s*' + re.escape(witness_name)[:40],
+        r'charged\s+(?:with|under).{0,80}' + re.escape(witness_name)[:40],
+        r'exercising\s+(?:his|her|their)\s+right\s+to\s+silence',
+        r'has\s+not\s+testified\s+directly',
+    ]
+    for pattern in defendant_patterns:
+        if re.search(pattern, desc_lower, re.IGNORECASE):
+            return True
+    # Also check if the defendant is named in the first paragraph
+    if len(name_parts) >= 2:
+        for i in range(len(name_parts)):
+            for j in range(i + 1, len(name_parts) + 1):
+                partial = " ".join(name_parts[i:j])
+                # Look for defendant context near this partial name
+                for context in ["defendant", "accused", "charged"]:
+                    idx = desc_lower.find(context)
+                    if 0 <= idx < len(desc_lower):
+                        # Check within 100 chars of defendant mention
+                        window = desc_lower[max(0, idx - 50):min(len(desc_lower), idx + 150)]
+                        if partial in window:
+                            return True
+    return False
+
+
+def _extract_witness_context(witness_name: str, case_description: str) -> str:
+    """Extract case-fact context lines relevant to a specific witness for topic filtering."""
+    if not witness_name or not case_description:
+        return case_description[:200]
+    parts = witness_name.split()
+    if len(parts) < 2:
+        return case_description[:200]
+    
+    sentences = re.split(r'(?<=[.!?])\s+', case_description)
+    relevant = []
+    search_terms = [
+        witness_name.lower(),
+        parts[0].lower(),
+        parts[-1].lower(),
+    ]
+    # Also include role terms if found in nearby sentences
+    role_terms = []
+    
+    for s in sentences:
+        s_lower = s.lower()
+        if any(term in s_lower for term in search_terms):
+            relevant.append(s)
+            # Try to capture the witness role
+            for role_kw in ["witness", "will testify", "testified", "investigator", "expert", 
+                          "accountant", "inspector", "whistleblower", "officer", "analyst",
+                          "defendant", "victim", "manager", "director", "employee"]:
+                if role_kw in s_lower and role_kw not in role_terms:
+                    role_terms.append(role_kw)
+    
+    if len(relevant) < 2:
+        return case_description[:300]
+    
+    context = " ".join(relevant[:5])
+    role_hint = ""
+    if role_terms:
+        role_hint = f"\nThis witness's role: {', '.join(role_terms[:3])}. "
+    
+    return (
+        f"{role_hint}Focus your examination on the following case facts relevant to {witness_name} "
+        f"and their stated role. Do NOT ask about topics that another witness is better positioned to address:\n\n{context}"
+    )
+    """Extract the defendant's full name from the case description."""
+    if not case_description:
+        return ""
+    desc = case_description[:500]  # First 500 chars usually contain the defendant intro
+    patterns = [
+        r'(?:The\s+)?defendant\s*,?\s*((?:[A-Z][a-zà-ü]+(?:\s+(?:[A-Z][a-zà-ü]+|de\s+[A-Z][a-zà-ü]+|van\s+[A-Z][a-zà-ü]+|von\s+[A-Z][a-zà-ü]+))+))',
+        r'((?:[A-Z][a-zà-ü]+(?:\s+(?:[A-Z][a-zà-ü]+|de\s+[A-Z][a-zà-ü]+|van\s+[A-Z][a-zà-ü]+|von\s+[A-Z][a-zà-ü]+))+))\s*,?\s*(?:aged\s+\d+|is\s+charged|stands\s+charged)',
+    ]
+    for pattern in patterns:
+        m = re.search(pattern, desc)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
 def witness_direct(state: TrialState) -> dict:
     """
     Step 1 of Witness Examination:
@@ -1542,6 +1660,39 @@ def witness_direct(state: TrialState) -> dict:
         
     transcript = []
     facts = state.get("case_description", "")
+    declined_witnesses = list(state.get("declined_witnesses", []))
+    
+    # ── Right to Silence Check ──────────────────────────────────
+    # If this witness is the defendant and has invoked right to silence,
+    # or the case facts explicitly state the defendant will not testify,
+    # end the examination immediately.
+    if current_witness and _is_defendant_witness(current_witness, facts):
+        transcript.append(AIMessage(
+            content=f"The court calls {current_witness} to the stand.",
+            name="Clerk"
+        ))
+        transcript.append(AIMessage(
+            content=f"I exercise my right to remain silent under applicable law. I will not testify in these proceedings.",
+            name="Witness"
+        ))
+        transcript.append(AIMessage(
+            content=f"Understood. The court respects the witness's right to silence. "
+                    f"The fact-finder shall draw no adverse inference from this election. "
+                    f"Counsel, call your next witness.",
+            name="Judge"
+        ))
+        declined_witnesses.append(current_witness)
+        updated_state = {**state, "transcript": state.get("transcript", []) + transcript}
+        clerk_update = _clerk_compression(updated_state)
+        return {
+            "witness_queue": witness_queue,
+            "current_witness": None,
+            "examination_phase": None,
+            "witness_direct_qa": [],
+            "transcript": transcript,
+            "declined_witnesses": declined_witnesses,
+            **clerk_update
+        }
     
     pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
     def_llm  = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
@@ -1564,6 +1715,31 @@ def witness_direct(state: TrialState) -> dict:
             
     direct_qa = []
     
+    # ── Oath / Swearing-In Ceremony ────────────────────────────
+    oath_phrases = {
+        "judeo_christian": {
+            "clerk": f"Do you solemnly swear that the testimony you are about to give in this matter shall be the truth, the whole truth, and nothing but the truth, so help you God?",
+            "witness": "I do.",
+        },
+        "secular": {
+            "clerk": f"Do you solemnly affirm, under penalty of perjury, that the testimony you are about to give shall be the truth, the whole truth, and nothing but the truth?",
+            "witness": "I do.",
+        },
+    }
+    # Use secular oath for civil law / inquisitorial systems
+    oath = oath_phrases["secular"] if jx["system"] in ("Civil Law", "Islamic Law") else oath_phrases["judeo_christian"]
+    court_address = jx["address"].split(";")[0].strip()
+    transcript.append(AIMessage(
+        content=f"The Clerk administers the oath to {current_witness}.",
+        name="Clerk"
+    ))
+    transcript.append(AIMessage(content=oath["clerk"], name="Clerk"))
+    transcript.append(AIMessage(content=oath["witness"], name="Witness"))
+    transcript.append(AIMessage(
+        content=f"Please be seated. {court_address}, your witness is sworn.",
+        name="Judge"
+    ))
+    
     # Visual phase transition banner
     if jx["cross"]:
         transcript.append(AIMessage(
@@ -1572,6 +1748,8 @@ def witness_direct(state: TrialState) -> dict:
         ))
         
         # ── ADVERSARIAL: Direct Examination (dynamic, up to 20 Qs) ──
+        # Extract topic-filtered facts for this specific witness
+        topic_facts = _extract_witness_context(current_witness, facts)
         direct_qa = _examination_loop(
             examiner_llm=pros_llm,
             examiner_prompt_fn=p.prosecutor_prompt,
@@ -1579,7 +1757,7 @@ def witness_direct(state: TrialState) -> dict:
             witness_name=current_witness,
             witness_llm=wit_llm,
             fc_llm=fc_llm,
-            facts=facts,
+            facts=topic_facts,
             jx=jx,
             phase_type="direct",
             max_q=20,
@@ -1696,6 +1874,7 @@ def witness_cross(state: TrialState) -> dict:
         
         # ── ADVERSARIAL: Cross-Examination (dynamic, up to 15 Qs) ──
         prior_str = str(direct_qa[-4:]) if direct_qa else ""
+        topic_facts = _extract_witness_context(current_witness, facts)
         _examination_loop(
             examiner_llm=def_llm,
             examiner_prompt_fn=p.defense_prompt,
@@ -1703,7 +1882,7 @@ def witness_cross(state: TrialState) -> dict:
             witness_name=current_witness,
             witness_llm=wit_llm,
             fc_llm=fc_llm,
-            facts=facts,
+            facts=topic_facts,
             jx=jx,
             phase_type="cross",
             max_q=15,
@@ -1781,26 +1960,35 @@ def witness_redirect(state: TrialState) -> dict:
             name="Judge"
         ))
         
-        # ── ADVERSARIAL: Impeachment Question (1 focused Q with objection check) ──
+        # ── ADVERSARIAL: Structured Impeachment (4-step sequence) ──
+        impeachment_step_labels = ["Foundation", "Commitment", "Confrontation", "Closing"]
         try:
-            impeach_q = def_llm.invoke([
+            impeach_resp = def_llm.invoke([
                 SystemMessage(content=p.defense_impeachment_prompt(jx)),
                 HumanMessage(content=(
-                    f"IMPEACHMENT — 1 question to {current_witness}.\n"
+                    f"IMPEACHMENT — Structured 4-step sequence to {current_witness}.\n"
                     f"Their direct answers: {direct_qa}\n\n"
-                    f"Ask ONE short question (under 20 words) designed to challenge the witness's "
-                    f"credibility: bias, prior inconsistent statement, bad character for truthfulness, "
-                    f"or inability to observe. Base it on the case facts.\nFacts:\n{facts}"
+                    f"Challenge the witness's credibility. Base it on the case facts.\n"
+                    f"Facts:\n{facts}"
                 ))
             ])
+            # Parse the JSON array of 4 questions
+            impeach_questions = _parse_json_robustly(impeach_resp.content.strip())
+            if isinstance(impeach_questions, list) and len(impeach_questions) >= 2:
+                impeach_questions = [str(q) for q in impeach_questions[:4]]
+            else:
+                # Fallback: treat as single question
+                impeach_questions = [impeach_resp.content.strip()]
         except Exception as e:
             logger.error(f"Impeachment question error: {e}")
-            transcript.append(AIMessage(content="[Defense could not formulate an impeachment question]", name="System"))
-        else:
-            transcript.append(AIMessage(content=impeach_q.content, name="Defense Counsel"))
+            impeach_questions = []
 
+        for i, q_text in enumerate(impeach_questions):
+            step_label = impeachment_step_labels[i] if i < len(impeachment_step_labels) else f"Step {i+1}"
+            logger.info(f"[IMPEACH] Step {i+1}/{len(impeach_questions)} ({step_label}): {q_text[:60]}...")
+            transcript.append(AIMessage(content=q_text, name="Defense Counsel"))
             _ask_with_objection_gate(
-                question_text=impeach_q.content,
+                question_text=q_text,
                 asking_name="Defense Counsel",
                 opposing_name="Prosecutor",
                 opposing_model=AGENT_MODELS["Prosecutor"],
@@ -1818,26 +2006,30 @@ def witness_redirect(state: TrialState) -> dict:
                 qa_wrapper=True,
             )
 
-        # ── ADVERSARIAL: Redirect Examination (1 question with objection check) ──
+        # ── ADVERSARIAL: Redirect Examination (up to 3 questions with objection check) ──
         try:
-            redirect_q = pros_llm.invoke([
-                SystemMessage(content=p.prosecutor_prompt(jx)),
+            redirect_resp = pros_llm.invoke([
+                SystemMessage(content=p.prosecution_redirect_prompt(jx)),
                 HumanMessage(content=(
-                    f"REDIRECT — 1 question to {current_witness}.\n"
-                    f"Their direct answers: {direct_qa}\n\n"
-                    f"Ask ONE short question (under 20 words) to clarify or rebut "
-                    f"something raised during cross-examination. Base it on the case facts.\n"
-                    f"Facts:\n{facts}"
+                    f"REDIRECT — rehabilitate {current_witness} after impeachment.\n"
+                    f"Their direct Q&A: {direct_qa}\n\n"
+                    f"Case facts:\n{facts}"
                 ))
             ])
+            redirect_questions = _parse_json_robustly(redirect_resp.content.strip())
+            if isinstance(redirect_questions, list) and len(redirect_questions) >= 1:
+                redirect_questions = [str(q) for q in redirect_questions[:3]]
+            else:
+                redirect_questions = [redirect_resp.content.strip()] if redirect_resp.content.strip() else []
         except Exception as e:
             logger.error(f"Redirect question error: {e}")
-            transcript.append(AIMessage(content="[Prosecutor could not formulate a redirect question]", name="System"))
-        else:
-            transcript.append(AIMessage(content=redirect_q.content, name="Prosecutor"))
+            redirect_questions = []
 
+        for i, q_text in enumerate(redirect_questions):
+            logger.info(f"[REDIRECT] Q{i+1}/{len(redirect_questions)}: {q_text[:60]}...")
+            transcript.append(AIMessage(content=q_text, name="Prosecutor"))
             _ask_with_objection_gate(
-                question_text=redirect_q.content,
+                question_text=q_text,
                 asking_name="Prosecutor",
                 opposing_name="Defense Counsel",
                 opposing_model=AGENT_MODELS["Defense Counsel"],

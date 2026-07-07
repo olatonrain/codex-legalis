@@ -30,8 +30,9 @@ def create_initial_state(
         "missing_witnesses_answers": {},
         "pending_human_question": None,
         "human_input_buffer": [],
-        "witness_queue": [],
-        "current_witness": None,
+    "witness_queue": [],
+    "declined_witnesses": [],
+    "current_witness": None,
         "examination_phase": None,
         "witness_direct_qa": [],
         "shadow_jury_count": shadow_jury_count,
@@ -102,6 +103,7 @@ class TrialState(TypedDict):
 
     # ── Trial Tracking ────────────────────────────────────────────
     witness_queue: List[str]
+    declined_witnesses: List[str]
     current_witness: Optional[str]
     examination_phase: Optional[str]   # 'direct', 'cross', or 'redirect'
     witness_direct_qa: List[Dict[str, str]]  # Q&A log from direct, passed to cross-examination

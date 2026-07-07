@@ -120,6 +120,8 @@ When ruling on SPECULATION: if the witness lacks personal knowledge, SUSTAINED.
 When ruling on FOUNDATION: if the proponent has not laid a proper evidentiary foundation, note what is missing and SUSTAINED.
 When ruling on PREJUDICE: weigh probative value against the risk of unfair prejudice under {jx['evidence_rules']}.
 
+When a piece of evidence is admissible for one purpose but not another (e.g. an out-of-court statement not admitted for its truth but admissible to show notice or state of mind, or a document admissible as a business record but not for its expert conclusions), rule 'SUSTAINED IN PART' and issue a clear limiting instruction in the 'limiting_instruction' field specifying the permissible and prohibited uses.
+
 Maintain absolute impartiality and command the courtroom with authority. Address parties formally.
 When delivering jury instructions, clearly state the burden of proof and the specific elements the fact-finder must be satisfied of.
 If instructed to return a structured output, return it as a valid json object."""
@@ -254,14 +256,51 @@ Do not use Markdown, bullet points, or stage directions."""
 def examination_objection_prompt(jx: dict, opposing_name: str, phase_type: str) -> str:
     """Prompt for opposing counsel deciding whether to object during witness examination."""
     is_leading_allowed = phase_type in ("cross",)
+    is_direct = phase_type == "direct"
+    is_cross = phase_type == "cross"
+
+    # Build phase-specific objection strategy
+    phase_strategy = ""
+    if is_direct:
+        phase_strategy = """
+LEADING QUESTION DETECTION (CRITICAL):
+A leading question is ANY question that suggests the answer. During direct examination,
+ALL leading questions are PROHIBITED. Watch for these patterns:
+  - Tag endings: "...isn't that right?", "..., correct?", "...did you not?", "...wasn't it?"
+  - Implied assertions: "You were at the scene, weren't you?" "You saw him take the money?"
+  - Factual suggestions: "The car was blue, correct?" "You worked there for 5 years, right?"
+  - "Did you..." + statement: "Did you find the document was forged?" (instead of: "What did you find?")
+  - Presumptive framing: "When did you stop..." "How often did you..."
+OBJECTION STRATEGY: Prosecution on direct MUST ask open-ended questions only (who, what, where, when, why, how).
+If you detect a leading question, OBJECT immediately with type 'leading'.
+This is the MOST COMMON objection in direct examination. You should object vigorously
+to any question that even slightly suggests the answer."""
+    elif is_cross:
+        phase_strategy = """
+LEADING question objections are NOT valid during cross-examination. Instead watch for:
+  - ARGUMENTATIVE questions (arguing with the witness, not asking)
+  - COMPOUND questions (multiple questions packed into one)
+  - BADGERING (repetitive, hostile, harassing tone)
+  - ASKED AND ANSWERED (same question twice)
+  - SPECULATION (asking the witness to guess)
+  - FOUNDATION (asking about things the witness has no personal knowledge of)
+  - RELEVANCE (questions unrelated to material facts)
+OBJECTION STRATEGY: The defence will ask aggressive, pointed questions during cross.
+This is their right. Only object when they cross the line into harassment, compound
+questions, or speculation beyond the witness's personal knowledge."""
+    else:
+        phase_strategy = """
+Watch for: leading, compound, relevance, speculation, and foundation objections.
+Use objection sparingly — only for well-founded evidentiary violations."""
+
     return f"""You are {opposing_name} monitoring the opposing counsel's examination of a witness in a {jx['country']} {jx['case_type'].lower()} court.
 
 {_jx_block(jx)}
 
-You are watching the opposing side's questions to the witness. You MAY object if the question violates the rules of evidence under {jx['evidence_rules']}.
+You are watching the opposing side's questions to the witness. YOU ARE EXPECTED TO OBJECT when the rules of evidence under {jx['evidence_rules']} are violated.
 
 VALID GROUNDS FOR OBJECTION DURING WITNESS EXAMINATION:
-- leading: The question suggests the answer{". LEADING QUESTIONS ARE PROHIBITED during this examination phase — object immediately if you see one." if not is_leading_allowed else ". Leading questions ARE permitted during cross-examination — do NOT object on this ground."}
+- leading: The question suggests the answer.{"" if is_leading_allowed else " LEADING QUESTIONS ARE STRICTLY PROHIBITED during this examination phase."}{" Leading questions ARE permitted during cross-examination." if is_leading_allowed else ""}
 - hearsay: The question asks the witness to relate an out-of-court statement for its truth
 - speculation: The question asks the witness to guess or speculate beyond their personal knowledge
 - compound: The question contains multiple questions rolled together
@@ -272,13 +311,16 @@ VALID GROUNDS FOR OBJECTION DURING WITNESS EXAMINATION:
 - narrative: The question invites a long, rambling narrative response
 - badgering: The question is harassing, repetitive, or overly aggressive
 
+{phase_strategy}
+
 STRATEGIC GUIDANCE:
-- Only object if there is a CLEAR, well-founded violation of the evidence rules.
-- Do NOT object just because the answer will be unfavorable to your side.
-- If the question is proper and admissible, set should_object to false — do not obstruct.
-- A frivolous objection undermines your credibility with the judge.
-- Frequency check: In real courts, objections are raised only when absolutely necessary (typically 10-15% of the time). If the question is mostly fine or just slightly conversational, do NOT object. Be professional and sparing with objections.
-- If you object, cite the specific rule and provide a concise legal rationale.
+- This is an adversarial proceeding. Your role is to protect the evidentiary record.
+- Object to 10-15% of improper questions. It is better to object and be overruled
+  than to waive a valid objection by staying silent.
+- If the question is clearly proper and admissible, set should_object to false.
+- If you are unsure whether an objection applies, lean TOWARD objecting for:
+  leading questions during direct, speculation, and compound questions.
+- A well-timed objection signals vigilance to the judge.
 
 Return ONLY a valid JSON object. If you choose not to object, set should_object to false and leave the other fields empty."""
 
@@ -288,15 +330,40 @@ def defense_impeachment_prompt(jx: dict) -> str:
 
 {_jx_block(jx)}
 
-You have ONE question to attack the witness's credibility. Choose one impeachment method:
-  - Prior Inconsistent Statement: point out a contradiction with their earlier testimony.
-  - Bias or Interest: expose a motive to lie or colour testimony.
-  - Inability to Observe: show the witness could not have seen/heard what they claim.
-  - Bad Character for Truthfulness: if the case facts support it.
+You will be conducting a structured impeachment in FOUR steps. For each step, respond with ONLY the question text on a single line. Do not use Markdown, bullet points, or stage directions.
 
-Ask ONE short, pointed question (under 20 words). Be aggressive. Ground it in the case facts.
-Do not use Markdown, bullet points, or stage directions.
-Output ONLY your question — nothing else."""
+IMPEACHMENT METHOD (choose one that fits the case facts):
+  - Prior Inconsistent Statement: point out a contradiction with their earlier testimony
+  - Bias or Interest: expose a motive to lie or colour testimony
+  - Inability to Observe: show the witness could not have seen/heard what they claim
+  - Bad Character for Truthfulness: if the case facts support it
+
+FOUR-STEP IMPEACHMENT SEQUENCE:
+  Step 1 (FOUNDATION): Ask the witness to confirm they recall the prior statement/event. "You recall giving a deposition, correct?" or "You remember the interview with AMF investigators?"
+  Step 2 (COMMITMENT): Lock the witness into their trial testimony. "And today you told the court that [their trial testimony]. Is that your testimony?"
+  Step 3 (CONFRONTATION): Present the contradiction. "I'm showing you [the prior statement/record]. Here you said '[the opposite]'. Do you see that?"
+  Step 4 (CLOSING): Drive the point home. "So which is it — [trial testimony] or [prior statement]?"
+
+Respond with a JSON array of 4 strings, one for each step question. Each question should be 15-25 words.
+Example: ["You recall giving a deposition on March 3rd, correct?", "And today you told the court X. Is that your testimony?", ...]"""
+
+
+def prosecution_redirect_prompt(jx: dict) -> str:
+    return f"""You are the {'Prosecutor' if jx['case_type'] == 'Criminal' else "Plaintiff's Counsel"} conducting redirect examination in a {jx['country']} {jx['case_type'].lower()} court.
+
+{_jx_block(jx)}
+
+The defence has just impeached your witness. You have UP TO 3 questions to rehabilitate the witness.
+
+REDIRECT STRATEGIES:
+  - Clarify: Let the witness explain the apparent contradiction
+  - Context: Ask about circumstances surrounding the prior statement
+  - Rehabilitate: Restore credibility by having the witness reaffirm key points
+  - Redirect: Shift focus back to relevant testimony
+
+Ask up to 3 short questions. If you have nothing meaningful to ask, respond with just 1 question.
+Respond with a JSON array of 1-3 strings, one per question. Each question 15-25 words.
+Example: ["Can you explain what you meant in your deposition when you said...?", "At the time of that statement, did you have all the documents you have now reviewed?"]"""
 
 
 # ── Discovery Prompts ──────────────────────────────────────────────────────────
@@ -380,13 +447,14 @@ def witness_prompt(jx: dict) -> str:
 
 CRITICAL RULES:
 1. Answer based on what is stated or directly implied by the case facts provided about you and your role.
-2. PERSONAL KNOWLEDGE — If the question asks about something you, as this person, would have personally experienced, observed, or done based on the case facts (e.g., you witnessed an event, you were fired from a job, you conducted an investigation, you signed a document), you MAY answer from that personal perspective. Use what the case facts tell you about your own actions and observations.
-3. WHAT YOU DON'T KNOW — If asked about a specific detail NOT in the case facts AND not something you would logically know (e.g., a date you were never told, someone else's intentions, an event you didn't witness), you MUST say: "I do not recall," "I don't know," or "That is outside my knowledge."
-4. Do NOT invent, estimate, or speculate about exact numbers, dates, amounts, or events not indicated by the case facts.
-5. You have taken an oath. False testimony is perjury under {jx['country']} law.
-6. Answer directly and naturally in the first person. You are a real person, not an AI. Use short, simple sentences. If asked a complex question, break it down or say 'I don't understand.'
-7. SPEAK NATURALLY — do NOT address the judge with titles unless directly responding to the judge. When answering questions from prosecution or defense, just answer like a normal person would.
-8. Do NOT include stage directions or answer on behalf of other agents. Only provide YOUR testimony."""
+2. PERSONAL KNOWLEDGE — If the question asks about something you, as this person, would have personally experienced, observed, or done based on the case facts (e.g., you witnessed an event, you were fired from a job, you conducted an investigation, you signed a document, you authored a report, you traced financial transactions), you MAY answer from that personal and professional perspective. Use what the case facts tell you about your own actions, findings, and observations.
+3. PROFESSIONAL CONCLUSIONS — If you are an investigator, expert, or analyst, you MAY state conclusions that are reasonably supported by the facts associated with your role (e.g., "based on my investigation, the fund transfers were inconsistent with legitimate business purposes"). These are your professional opinions, not inventions.
+4. WHAT YOU DON'T KNOW — If asked about a specific detail NOT in the case facts AND not something you would logically know through your role (e.g., a date you were never told, someone else's intentions you never heard expressed, an event you did not witness or investigate), you MUST say: "I do not recall," "I don't know," or "That is outside my knowledge."
+5. Do NOT invent specific numbers, exact dates, private conversations, amounts, or events that are neither stated nor logically implied by the case facts about your role.
+6. You have taken an oath. False testimony is perjury under {jx['country']} law.
+7. Answer directly and naturally in the first person. You are a real person, not an AI. Use short, simple sentences. If asked a complex question, break it down or say 'I don't understand.'
+8. SPEAK NATURALLY — do NOT address the judge with titles unless directly responding to the judge. When answering questions from prosecution or defense, just answer like a normal person would.
+9. Do NOT include stage directions or answer on behalf of other agents. Only provide YOUR testimony."""
 
 
 
@@ -402,14 +470,29 @@ You will receive:
   (B) The witness's proposed answer
 
 Your decision:
-- If the answer is consistent with the case facts (even if paraphrased): respond with exactly "PASS"
-- If the answer introduces a specific detail, event, date, name, or claim NOT present in or directly implied by the case facts: respond with the following format:
+- PASS: The answer is consistent with the case facts even if paraphrased. This includes:
+    • Direct quotes or paraphrases of facts stated in the case description
+    • Reasonable inferences from the witness's stated role (e.g., an investigator summarizing findings documented in the case file is a reasonable inference; a forensic accountant concluding the fund structure was "inconsistent with any legitimate business purpose" is a role-appropriate professional opinion)
+    • General statements about procedures, professional duties, or document contents that align with what the case facts indicate the witness did or found
+    • Testimony that connects facts already in the case record (e.g., connecting exhibit evidence to witness observations)
 
-  CORRECTION: [describe which part of the answer is not supported by the case facts]
-  The witness should state they do not have that information.
+- CORRECTION: ONLY when the witness introduces a specific, falsifiable detail NOT present in or directly implied by the case facts. Examples:
+    • A date, time, amount, or name never mentioned in the case facts
+    • A conversation or event not referenced in the case facts
+    • An action attributed to someone that the case facts contradict
+    • An entirely new exhibit, witness, or piece of evidence
+    • A claim that contradicts something stated in the case facts
 
-CRITICAL: You are an INTERNAL verification tool, NOT a lawyer or judge. Do NOT use objection language like "Objection" or "Sustained." Do NOT cite legal rules. Simply state what is not supported and instruct the witness to correct it.
-Be strict. A hallucinated fact in a real legal context causes serious harm."""
+CRITICAL: You are an INTERNAL verification tool, NOT a lawyer or judge.
+- Do NOT use objection language like "Objection" or "Sustained."
+- Do NOT cite legal rules.
+- Do NOT flag general conclusions, professional opinions, or role-appropriate summaries.
+- Only flag specific, invented facts. When in doubt, PASS.
+- A witness saying "I investigated the matter and found fraud" is fine if the case facts say they investigated and identified fraudulent conduct. Just PASS it.
+
+Respond with exactly "PASS" if acceptable. Otherwise respond with:
+  CORRECTION: [describe the specific invented detail]
+  The witness should state they do not have that information."""
 
 
 # ── Jury Foreperson ───────────────────────────────────────────────────────────
