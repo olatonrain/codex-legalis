@@ -3,52 +3,15 @@
 ## System Diagram
 
 ```mermaid
-graph TD
-
-    subgraph FRONTEND["Frontend — Browser"]
-        UI["index.html + static/app.js<br/>Vanilla HTML / CSS / JS"]
-    end
-
-    subgraph BACKEND["Backend — FastAPI (server.py)"]
-        API["API Routes<br/>/api/trial/start · /step · /demo · /magistrate"]
-        SEC["Security Gate<br/>Prompt injection detection"]
-        UPLOAD["File & Audio Upload<br/>PDF · DOCX · TXT · Voice"]
-    end
-
-    subgraph ORCHESTRATION["Orchestration — LangGraph"]
-        GRAPH["src/graph.py<br/>StateGraph + TrialState"]
-        RUNNER["legalis/agents.py<br/>run_trial_step() · dramatic opening"]
-    end
-
-    subgraph AGENTS["Agent Society — 11 Specialised Qwen Agents"]
-        MAG["Magistrate<br/>qwen-max"]
-        JUD["Judge<br/>qwen-max"]
-        PROS["Prosecutor<br/>qwen-plus-latest"]
-        DEF["Defence Counsel<br/>qwen-plus-latest"]
-        WIT["Witnesses<br/>qwen-flash"]
-        FC["Fact Checker<br/>qwen-plus-latest"]
-        CLK["Clerk<br/>qwen-flash"]
-        FP["Foreperson<br/>qwen-plus-latest"]
-        JURY["Jury Panel (6-15)<br/>qwen-max · plus · flash · turbo"]
-        SHADOW["Shadow Juries (5-50)<br/>qwen-max · plus · flash · turbo"]
-        ARCH["Archivist<br/>qwen-turbo-latest"]
-    end
-
-    subgraph QWEN["Qwen Cloud — Alibaba Cloud"]
-        CHAT["Chat Models<br/>qwen-max · qwen-plus · qwen-flash · qwen-turbo"]
-        AUDIO["Audio Models<br/>qwen-omni-turbo · qwen3-omni-flash"]
-        TTS["TTS<br/>qwen3-tts-flash"]
-    end
-
-    UI -->|"HTTP POST"| API
-    API --> SEC
-    API --> UPLOAD
-    API --> RUNNER
-    RUNNER --> GRAPH
-    GRAPH --> MAG
-    UPLOAD -->|"Audio bytes"| AUDIO
-    MAG -->|"HTTPS · OpenAI-compatible API"| CHAT
-    MAG -->|"Audio transcription"| AUDIO
+graph LR
+    UI["Browser<br/>HTML + JS"] -->|"HTTP POST"| API["FastAPI<br/>server.py"]
+    API --> SEC["Security Gate"]
+    API --> UPLOAD["File Upload<br/>PDF · DOCX · Audio"]
+    API --> GRAPH["LangGraph<br/>State Machine"]
+    GRAPH --> AGENTS["11 Qwen Agents<br/>Magistrate · Judge · Counsel<br/>Witnesses · Fact Checker<br/>Clerk · Jury · Shadow Jury<br/>Foreperson · Archivist"]
+    UPLOAD -->|"Audio bytes"| AUDIO["Qwen Audio<br/>Transcription"]
+    AGENTS -->|"OpenAI-compatible API"| CHAT["Qwen Chat Models<br/>max · plus · flash · turbo"]
+    AGENTS -->|"Audio API"| AUDIO
 ```
 
 ## Tech Stack
