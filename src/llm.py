@@ -67,11 +67,53 @@ def get_llm(temperature: float = 0.7, model: str = "qwen-max"):
         raise
 
 
-def _make_invoke(llm):
-    """Wrap llm.invoke with retry logic."""
-    def invoke_with_retry(messages, **kwargs):
-        return _retry_on_api_error(llm.invoke, messages, **kwargs)
-    return invoke_with_retry
+class _RetryStructuredLLM:
+    """Wrapper around a structured LLM that adds retry logic to invoke/ainvoke."""
+
+    def __init__(self, structured_llm):
+        self._llm = structured_llm
+
+    def invoke(self, messages, **kwargs):
+        return _retry_on_api_error(self._llm.invoke, messages, **kwargs)
+
+    async def ainvoke(self, messages, **kwargs):
+        return await _retry_on_api_error_async(self._llm.ainvoke, messages, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._llm, name)
+
+
+async def _retry_on_api_error_async(func, *args, **kwargs):
+    """Async version of retry wrapper."""
+    last_exc = None
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            return await func(*args, **kwargs)
+        except (APIConnectionError, RateLimitError) as exc:
+            last_exc = exc
+            delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
+            logger.warning(
+                "LLM API transient error (attempt %d/%d): %s. Retrying in %.1fs...",
+                attempt, _MAX_RETRIES, exc, delay,
+            )
+            import asyncio
+            await asyncio.sleep(delay)
+        except AuthenticationError as exc:
+            logger.error("LLM AuthenticationError: %s. Check QWEN_API_KEY.", exc)
+            raise
+        except APIError as exc:
+            last_exc = exc
+            if attempt < _MAX_RETRIES:
+                delay = _RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                logger.warning(
+                    "LLM API error (attempt %d/%d): %s. Retrying in %.1fs...",
+                    attempt, _MAX_RETRIES, exc, delay,
+                )
+                import asyncio
+                await asyncio.sleep(delay)
+            else:
+                logger.error("LLM API error after %d attempts: %s", _MAX_RETRIES, exc)
+    raise last_exc
 
 
 def get_structured_llm(schema, temperature: float = 0.1, model: str = "qwen-max"):
@@ -86,9 +128,4 @@ def get_structured_llm(schema, temperature: float = 0.1, model: str = "qwen-max"
             model, exc, exc_info=True,
         )
         raise
-    # Wrap the invoke method with retry logic while preserving the structured schema
-    original_invoke = structured.invoke
-    def _structured_invoke(messages, **kwargs):
-        return _retry_on_api_error(original_invoke, messages, **kwargs)
-    structured.invoke = _structured_invoke
-    return structured
+    return _RetryStructuredLLM(structured)
