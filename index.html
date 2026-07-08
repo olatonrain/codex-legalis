@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codex Legalis — Multi-Agent Legal Simulation</title>
+    <title>Codex legalist — Multi-Agent Legal Simulation</title>
     <meta
       name="description"
       content="AI-powered autonomous courtroom simulation with multi-agent prosecution, defense, jury, and fact-checking. Jurisdiction-aware dramatic trial proceedings."
@@ -1972,7 +1972,7 @@
       <div class="brand">
         <i class="fas fa-balance-scale"></i>
         <div>
-          <div>Codex Legalis</div>
+          <div>Codex legalist</div>
           <div class="brand-sub">Multi-Agent Legal Simulation</div>
         </div>
       </div>
@@ -2039,9 +2039,7 @@
           <i class="fas fa-times"></i>
         </button>
 
-        <div class="panel-title">
-          <i class="fas fa-users"></i> Agent Roster
-        </div>
+        <div class="panel-title"><i class="fas fa-users"></i> Agent Roster</div>
 
         <div id="agentRosterContainer">
           <div
@@ -2151,32 +2149,40 @@
               <div class="stat-label">Version</div>
               <div class="stat-value mono" style="font-size: 22px">v1.0.0</div>
               <div class="stat-sub">Build 2026.07.01</div>
-          </div>
-        </div>
-
-        <div class="right-section" id="motionRulingsSection" style="display:none">
-          <div class="panel-title">
-            <i class="fas fa-file-signature"></i> Motion Rulings
-          </div>
-          <div id="motionRulingsContainer">
-            <div style="font-size: 0.78rem; color: var(--muted)">
-              No motions filed yet.
             </div>
           </div>
-        </div>
 
-        <div class="right-section" id="discoverySection" style="display:none">
-          <div class="panel-title">
-            <i class="fas fa-search"></i> Discovery Summary
-          </div>
-          <div id="discoveryContainer">
-            <div style="font-size: 0.78rem; color: var(--muted)">
-              Awaiting discovery phase.
+          <div
+            class="right-section"
+            id="motionRulingsSection"
+            style="display: none"
+          >
+            <div class="panel-title">
+              <i class="fas fa-file-signature"></i> Motion Rulings
+            </div>
+            <div id="motionRulingsContainer">
+              <div style="font-size: 0.78rem; color: var(--muted)">
+                No motions filed yet.
+              </div>
             </div>
           </div>
-        </div>
 
-        <div
+          <div
+            class="right-section"
+            id="discoverySection"
+            style="display: none"
+          >
+            <div class="panel-title">
+              <i class="fas fa-search"></i> Discovery Summary
+            </div>
+            <div id="discoveryContainer">
+              <div style="font-size: 0.78rem; color: var(--muted)">
+                Awaiting discovery phase.
+              </div>
+            </div>
+          </div>
+
+          <div
             style="
               display: flex;
               justify-content: space-between;
@@ -2426,11 +2432,7 @@
             </div>
 
             <!-- Review Step (injected by JS) -->
-            <div
-              class="review-step"
-              id="reviewStep"
-              style="display: none"
-            >
+            <div class="review-step" id="reviewStep" style="display: none">
               <!-- Review summary rendered by app.js renderReviewStep() -->
             </div>
 
@@ -2536,7 +2538,8 @@
                     color: var(--accent);
                     font-weight: 600;
                   "
-                >Opening Statements</span>
+                  >Opening Statements</span
+                >
                 <span
                   id="transcriptCount"
                   style="
@@ -2616,7 +2619,20 @@
               <h4 style="font-size: 14px">
                 <i class="fas fa-vote-yea" style="color: var(--gold)"></i> Jury
                 Consensus
-                <span id="deliberationLiveBadge" style="display:none;margin-left:8px;font-size:10px;font-family:Inter;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--defense)">● LIVE</span>
+                <span
+                  id="deliberationLiveBadge"
+                  style="
+                    display: none;
+                    margin-left: 8px;
+                    font-size: 10px;
+                    font-family: Inter;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    color: var(--defense);
+                  "
+                  >● LIVE</span
+                >
               </h4>
               <span
                 class="mono"
@@ -2631,13 +2647,33 @@
               </div>
             </div>
           </div>
-          <div id="benchNotice" style="display: none; background: rgba(230, 126, 34, 0.1); border: 1px solid var(--defense); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-            <h4 style="color: var(--defense); margin: 0 0 8px 0; font-size: 14px;"><i class="fas fa-balance-scale"></i> Bench Trial Jurisdiction</h4>
-            <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text);">
-              This jurisdiction does not use jury trials. The verdict will be rendered by the presiding judge acting as the sole finder of fact.
+          <div
+            id="benchNotice"
+            style="
+              display: none;
+              background: rgba(230, 126, 34, 0.1);
+              border: 1px solid var(--defense);
+              padding: 16px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+            "
+          >
+            <h4
+              style="color: var(--defense); margin: 0 0 8px 0; font-size: 14px"
+            >
+              <i class="fas fa-balance-scale"></i> Bench Trial Jurisdiction
+            </h4>
+            <div
+              style="font-size: 0.9rem; line-height: 1.5; color: var(--text)"
+            >
+              This jurisdiction does not use jury trials. The verdict will be
+              rendered by the presiding judge acting as the sole finder of fact.
             </div>
           </div>
-          <h4 style="font-size: 14px; margin-bottom: 12px" id="juryPanelHeaderWrapper">
+          <h4
+            style="font-size: 14px; margin-bottom: 12px"
+            id="juryPanelHeaderWrapper"
+          >
             <i class="fas fa-users" style="color: var(--gold)"></i>
             <span id="juryPanelHeader">Jury Panel</span>
           </h4>
@@ -2667,37 +2703,95 @@
             <div class="verdict-sub" id="verdictSub">Awaiting verdict…</div>
           </div>
 
-          <div id="actualJuryCard" class="chart-card" style="margin-top: 20px; display:none;">
+          <div
+            id="actualJuryCard"
+            class="chart-card"
+            style="margin-top: 20px; display: none"
+          >
             <h4><i class="fas fa-users"></i> Jury Vote Breakdown</h4>
-            <div id="juryVoteBreakdown" style="margin-bottom: 12px;"></div>
-            <div id="forepersonRationale" style="font-size: 0.85rem; color: var(--text); line-height: 1.5; padding: 10px; background: var(--bg); border-radius: 6px; border-left: 3px solid var(--gold);"></div>
+            <div id="juryVoteBreakdown" style="margin-bottom: 12px"></div>
+            <div
+              id="forepersonRationale"
+              style="
+                font-size: 0.85rem;
+                color: var(--text);
+                line-height: 1.5;
+                padding: 10px;
+                background: var(--bg);
+                border-radius: 6px;
+                border-left: 3px solid var(--gold);
+              "
+            ></div>
           </div>
-          
-          <div class="chart-card" style="margin-top: 20px;">
+
+          <div class="chart-card" style="margin-top: 20px">
             <h4><i class="fas fa-users-cog"></i> Shadow Jury Room</h4>
-            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;line-height:1.4;padding:8px;background:var(--bg);border-radius:6px;">
-              <i class="fas fa-info-circle" style="color:var(--gold);margin-right:4px;"></i>
-              Shadow juries are independent simulated juries that evaluate the same evidence to test verdict reliability. They run in parallel to validate the main jury's decision.
+            <div
+              style="
+                font-size: 0.75rem;
+                color: var(--muted);
+                margin-bottom: 10px;
+                line-height: 1.4;
+                padding: 8px;
+                background: var(--bg);
+                border-radius: 6px;
+              "
+            >
+              <i
+                class="fas fa-info-circle"
+                style="color: var(--gold); margin-right: 4px"
+              ></i>
+              Shadow juries are independent simulated juries that evaluate the
+              same evidence to test verdict reliability. They run in parallel to
+              validate the main jury's decision.
             </div>
-            <div id="shadowJuryNarrative" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-              <div style="font-size: 0.8rem; color: var(--muted); padding: 10px;">
+            <div
+              id="shadowJuryNarrative"
+              style="max-height: 400px; overflow-y: auto; padding-right: 10px"
+            >
+              <div
+                style="font-size: 0.8rem; color: var(--muted); padding: 10px"
+              >
                 Awaiting shadow jury deliberation...
               </div>
             </div>
           </div>
-          
-          <div id="sentencingCard" class="chart-card" style="display:none; margin-top: 20px;">
+
+          <div
+            id="sentencingCard"
+            class="chart-card"
+            style="display: none; margin-top: 20px"
+          >
             <h4><i class="fas fa-hammer"></i> Sentence Pronounced</h4>
-            <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--gold);" id="sentenceText">—</div>
-            <div style="font-size: 0.95rem; margin-bottom: 8px; line-height: 1.5;" id="sentenceTerm">—</div>
-            <div style="font-size: 0.8rem; color: var(--muted); line-height: 1.5;" id="sentenceRationale">—</div>
+            <div
+              style="
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin-bottom: 10px;
+                color: var(--gold);
+              "
+              id="sentenceText"
+            >
+              —
+            </div>
+            <div
+              style="font-size: 0.95rem; margin-bottom: 8px; line-height: 1.5"
+              id="sentenceTerm"
+            >
+              —
+            </div>
+            <div
+              style="font-size: 0.8rem; color: var(--muted); line-height: 1.5"
+              id="sentenceRationale"
+            >
+              —
+            </div>
           </div>
-          
+
           <div class="analytics-grid">
             <div class="chart-card">
               <h4>
-                <i class="fas fa-tachometer-alt"></i> Burden Met
-                Probability
+                <i class="fas fa-tachometer-alt"></i> Burden Met Probability
               </h4>
               <div style="text-align: center; padding: 20px 0">
                 <div
@@ -2732,9 +2826,7 @@
           </div>
           <div class="analytics-grid">
             <div class="chart-card">
-              <h4>
-                <i class="fas fa-chart-bar"></i> Vote Distribution
-              </h4>
+              <h4><i class="fas fa-chart-bar"></i> Vote Distribution</h4>
               <div id="voteChart" style="height: 200px"></div>
             </div>
             <div class="precedent-card">
@@ -2754,25 +2846,61 @@
         <!-- ─ BENCHMARK VIEW ─ -->
         <div class="view" id="view-benchmark">
           <div class="benchmark-header">
-            <h3><i class="fas fa-chart-line" style="color: var(--gold)"></i> Agent Society Benchmark</h3>
-            <p>Comparing three approaches using identical case facts to demonstrate the value of adversarial multi-agent collaboration</p>
+            <h3>
+              <i class="fas fa-chart-line" style="color: var(--gold)"></i> Agent
+              Society Benchmark
+            </h3>
+            <p>
+              Comparing three approaches using identical case facts to
+              demonstrate the value of adversarial multi-agent collaboration
+            </p>
           </div>
 
           <!-- Run Benchmark Button -->
-          <div class="benchmark-run" style="margin-bottom:20px;">
-            <h4 style="margin-bottom: 12px;"><i class="fas fa-play"></i> Run Benchmark</h4>
+          <div class="benchmark-run" style="margin-bottom: 20px">
+            <h4 style="margin-bottom: 12px">
+              <i class="fas fa-play"></i> Run Benchmark
+            </h4>
             <div class="run-info">
-              <p id="benchmarkStatus">Run a benchmark to compare Raw LLM vs Single-Agent vs Codex Legalis using the current case facts.</p>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
-                <button id="runBenchmarkBtn" class="nav-btn primary" style="background:var(--navy);color:white;">
+              <p id="benchmarkStatus">
+                Run a benchmark to compare Raw LLM vs Single-Agent vs Codex
+                legalist using the current case facts.
+              </p>
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  flex-wrap: wrap;
+                  margin-top: 12px;
+                "
+              >
+                <button
+                  id="runBenchmarkBtn"
+                  class="nav-btn primary"
+                  style="background: var(--navy); color: white"
+                >
                   <i class="fas fa-flask"></i> Run Benchmark (Mock)
                 </button>
-                <button id="runBenchmarkLiveBtn" class="nav-btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border);">
+                <button
+                  id="runBenchmarkLiveBtn"
+                  class="nav-btn"
+                  style="
+                    background: var(--bg);
+                    color: var(--text);
+                    border: 1px solid var(--border);
+                  "
+                >
                   <i class="fas fa-bolt"></i> Run Live (API Calls)
                 </button>
               </div>
-              <div style="margin-top:12px;font-size:0.75rem;color:var(--muted);">
-                <div class="code-block" style="margin-bottom:4px;">
+              <div
+                style="
+                  margin-top: 12px;
+                  font-size: 0.75rem;
+                  color: var(--muted);
+                "
+              >
+                <div class="code-block" style="margin-bottom: 4px">
                   <code>python benchmark.py --mock</code>
                   <span class="code-comment"># CLI alternative</span>
                 </div>
@@ -2781,15 +2909,21 @@
           </div>
 
           <!-- Comparison Table -->
-          <div class="benchmark-table-card" id="benchmarkTableCard" style="display:none;">
-            <h4 style="margin-bottom: 12px;"><i class="fas fa-table"></i> Performance Comparison</h4>
+          <div
+            class="benchmark-table-card"
+            id="benchmarkTableCard"
+            style="display: none"
+          >
+            <h4 style="margin-bottom: 12px">
+              <i class="fas fa-table"></i> Performance Comparison
+            </h4>
             <table class="benchmark-table">
               <thead>
                 <tr>
                   <th>Metric</th>
                   <th>Raw LLM</th>
                   <th>Single-Agent</th>
-                  <th>Codex Legalis</th>
+                  <th>Codex legalist</th>
                 </tr>
               </thead>
               <tbody id="benchmarkTableBody">
@@ -2797,7 +2931,9 @@
                   <td>Evidence Citations</td>
                   <td id="benchRawCitations">—</td>
                   <td id="benchSingleCitations">—</td>
-                  <td id="benchMultiCitations" class="benchmark-highlight">—</td>
+                  <td id="benchMultiCitations" class="benchmark-highlight">
+                    —
+                  </td>
                 </tr>
                 <tr>
                   <td>Hallucinations</td>
@@ -2809,7 +2945,9 @@
                   <td>Verdict Consistency</td>
                   <td id="benchRawConsistency">N/A</td>
                   <td id="benchSingleConsistency">—</td>
-                  <td id="benchMultiConsistency" class="benchmark-highlight">—</td>
+                  <td id="benchMultiConsistency" class="benchmark-highlight">
+                    —
+                  </td>
                 </tr>
                 <tr>
                   <td>Shadow Jury Consensus</td>
@@ -2828,21 +2966,34 @@
           </div>
 
           <!-- Visual Charts -->
-          <div class="benchmark-charts" id="benchmarkCharts" style="display:none;">
+          <div
+            class="benchmark-charts"
+            id="benchmarkCharts"
+            style="display: none"
+          >
             <div class="chart-card">
               <h4><i class="fas fa-quote-right"></i> Evidence Citations</h4>
               <div class="bar-chart" id="benchCitationsChart"></div>
             </div>
 
             <div class="chart-card">
-              <h4><i class="fas fa-exclamation-triangle"></i> Hallucinations (Lower is Better)</h4>
+              <h4>
+                <i class="fas fa-exclamation-triangle"></i> Hallucinations
+                (Lower is Better)
+              </h4>
               <div class="bar-chart" id="benchHallucChart"></div>
             </div>
           </div>
 
           <!-- Sample Responses -->
-          <div class="benchmark-samples" id="benchmarkSamples" style="display:none;">
-            <h4 style="margin-bottom: 12px;"><i class="fas fa-comment-dots"></i> Sample Responses</h4>
+          <div
+            class="benchmark-samples"
+            id="benchmarkSamples"
+            style="display: none"
+          >
+            <h4 style="margin-bottom: 12px">
+              <i class="fas fa-comment-dots"></i> Sample Responses
+            </h4>
             <div class="sample-grid">
               <div class="sample-card">
                 <div class="sample-header">
@@ -2858,7 +3009,7 @@
 
               <div class="sample-card sample-card-success">
                 <div class="sample-header">
-                  <i class="fas fa-balance-scale"></i> Codex Legalis Output
+                  <i class="fas fa-balance-scale"></i> Codex legalist Output
                 </div>
                 <div class="sample-content" id="benchMultiSample">
                   Awaiting benchmark results...
@@ -2872,33 +3023,46 @@
 
           <!-- Key Findings -->
           <div class="benchmark-findings">
-            <h4 style="margin-bottom: 12px;"><i class="fas fa-lightbulb"></i> Key Findings</h4>
+            <h4 style="margin-bottom: 12px">
+              <i class="fas fa-lightbulb"></i> Key Findings
+            </h4>
             <div class="findings-grid">
               <div class="finding-card">
-                <div class="finding-icon" style="background: var(--prosecutor);">
+                <div class="finding-icon" style="background: var(--prosecutor)">
                   <i class="fas fa-times"></i>
                 </div>
                 <div class="finding-content">
                   <h5>Raw LLM</h5>
-                  <p>Simple prompt produces 1-2 sentence verdicts with no evidence citations or adversarial testing. High hallucination rate.</p>
+                  <p>
+                    Simple prompt produces 1-2 sentence verdicts with no
+                    evidence citations or adversarial testing. High
+                    hallucination rate.
+                  </p>
                 </div>
               </div>
               <div class="finding-card">
-                <div class="finding-icon" style="background: var(--magistrate);">
+                <div class="finding-icon" style="background: var(--magistrate)">
                   <i class="fas fa-exclamation"></i>
                 </div>
                 <div class="finding-content">
                   <h5>Single-Agent</h5>
-                  <p>One model handling all roles produces structured verdicts but limited analysis. Moderate hallucination rate.</p>
+                  <p>
+                    One model handling all roles produces structured verdicts
+                    but limited analysis. Moderate hallucination rate.
+                  </p>
                 </div>
               </div>
               <div class="finding-card">
-                <div class="finding-icon" style="background: var(--defense);">
+                <div class="finding-icon" style="background: var(--defense)">
                   <i class="fas fa-check"></i>
                 </div>
                 <div class="finding-content">
-                  <h5>Codex Legalis</h5>
-                  <p>Full adversarial trial with 11 specialized agents produces comprehensive analysis with zero hallucinations and high verdict consistency.</p>
+                  <h5>Codex legalist</h5>
+                  <p>
+                    Full adversarial trial with 11 specialized agents produces
+                    comprehensive analysis with zero hallucinations and high
+                    verdict consistency.
+                  </p>
                 </div>
               </div>
             </div>

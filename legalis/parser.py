@@ -1,5 +1,5 @@
 """
-legalis/parser.py
+legalist/parser.py
 ─────────────────
 Thin file-parsing helpers.
 Supports PDF, DOCX, and plain-text uploads.

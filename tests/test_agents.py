@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from legalis.agents import run_trial_step, generate_dramatic_opening, norm_agent, sanitise_content
+from legalist.agents import run_trial_step, generate_dramatic_opening, norm_agent, sanitise_content
 
 
 class TestNormAgent:
@@ -57,7 +57,7 @@ class TestRunTrialStep:
 
 class TestGenerateDramaticOpening:
     def test_generates_opening_lines(self):
-        with patch("legalis.agents.get_llm") as mock_llm:
+        with patch("legalist.agents.get_llm") as mock_llm:
             mock_instance = MagicMock()
             mock_instance.invoke.return_value = MagicMock(
                 content='[{"agent": "Bailiff", "text": "All rise"}]'
@@ -75,7 +75,7 @@ class TestGenerateDramaticOpening:
             assert result[0]["agent"] == "Bailiff"
 
     def test_fallback_on_llm_error(self):
-        with patch("legalis.agents.get_llm", side_effect=Exception("API Error")):
+        with patch("legalist.agents.get_llm", side_effect=Exception("API Error")):
             result = generate_dramatic_opening(
                 case_title="Test Case",
                 country="United States",

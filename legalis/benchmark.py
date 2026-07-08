@@ -10,7 +10,7 @@ Usage:
 Three approaches tested with identical case facts:
     1. Raw LLM: Simple prompt to Qwen ("What's the verdict?")
     2. Single-Agent: One LLM handles all roles (prosecutor, defense, judge, jury)
-    3. Multi-Agent: Codex Legalis (11 specialized agents + shadow jury)
+    3. Multi-Agent: Codex legalist (11 specialized agents + shadow jury)
 
 Metrics:
     - Verdict consistency (agreement rate across runs)
@@ -367,7 +367,7 @@ def run_benchmark(case_description: str, num_runs: int = 3, use_mock: bool = Fal
     print(single_results[0]["reasoning"][:500])
     print()
     
-    print("── Codex Legalis Output (11 specialized agents + shadow jury) ──")
+    print("── Codex legalist Output (11 specialized agents + shadow jury) ──")
     print(f"Verdict: {multi_results[0]['verdict']}")
     print(f"Shadow Jury Consensus: {multi_results[0].get('shadow_jury_consensus', 0):.1%}")
     print(f"Evidence Citations: {multi_results[0]['evidence_citations']}")

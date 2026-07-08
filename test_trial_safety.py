@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from legalis.agents import run_trial_step
+from legalist.agents import run_trial_step
 from src.nodes import evidence_node, opening_statements_node
 from src.state import create_initial_state
 
@@ -48,7 +48,7 @@ class TrialSafetyTests(unittest.TestCase):
             run_trial_step("phase_2", _state())
 
     def test_bench_trial_routes_to_judge_instructions_before_verdict(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
 
         self.assertEqual(_next_step_after("closing", _state()), "jury_instructions")
 

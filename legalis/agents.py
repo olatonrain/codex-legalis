@@ -1,5 +1,5 @@
 """
-legalis/agents.py
+legalist/agents.py
 ─────────────────
 Orchestrates AI agent calls for live trials.
 

@@ -1,7 +1,7 @@
 """
 tests/test_comprehensive.py
 ───────────────────────────
-Integration tests for the full Codex Legalis pipeline covering all 12 phases,
+Integration tests for the full Codex legalist pipeline covering all 12 phases,
 conditional features, and the comprehensive Vance demo case.
 """
 from unittest.mock import MagicMock, patch
@@ -15,7 +15,7 @@ import pytest
 
 class TestLiveSteps:
     def test_all_steps_have_node_mappings(self):
-        from legalis.agents import _LIVE_STEPS, run_trial_step
+        from legalist.agents import _LIVE_STEPS, run_trial_step
         assert len(_LIVE_STEPS) >= 12
         assert "discovery" in _LIVE_STEPS
         assert "motions" in _LIVE_STEPS
@@ -31,7 +31,7 @@ class TestLiveSteps:
         assert "reporter" in _LIVE_STEPS
 
     def test_all_steps_have_labels(self):
-        from legalis.agents import _LIVE_STEPS, _STEP_LABELS
+        from legalist.agents import _LIVE_STEPS, _STEP_LABELS
         for step in _LIVE_STEPS:
             assert step in _STEP_LABELS, f"Missing label for {step}"
             assert _STEP_LABELS[step], f"Empty label for {step}"
@@ -55,83 +55,83 @@ class TestPhaseTransitionRouting:
         return state
 
     def test_discovery_to_motions(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("discovery", self.get_state()) == "motions"
 
     def test_motions_to_opening(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("motions", self.get_state()) == "opening"
 
     def test_opening_to_evidence(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("opening", self.get_state()) == "evidence"
 
     def test_evidence_to_witness(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         state = self.get_state(witness_queue=["Dr. Chen"])
         assert _next_step_after("evidence", state) == "witness"
 
     def test_witness_loops_with_queue(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         state = self.get_state(witness_queue=["Dr. Chen", "Paul Brennan"])
         assert _next_step_after("witness", state) == "witness"
 
     def test_witness_to_rebuttal_empty_queue(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         state = self.get_state(witness_queue=[])
         assert _next_step_after("witness", state) == "rebuttal"
 
     def test_rebuttal_to_closing(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("rebuttal", self.get_state()) == "closing"
 
     def test_closing_to_jury_instructions_no_verdict(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("closing", self.get_state()) == "jury_instructions"
 
     def test_closing_to_shadow_jury_with_verdict(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("closing", self.get_state(verdict="Guilty")) == "shadow_jury"
 
     def test_jury_instructions_to_deliberation(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("jury_instructions", self.get_state()) == "jury_deliberation"
 
     def test_deliberation_to_shadow_jury_with_verdict(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("jury_deliberation", self.get_state(verdict="Guilty")) == "shadow_jury"
 
     def test_deliberation_loops_without_verdict(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("jury_deliberation", self.get_state()) == "jury_deliberation"
 
     def test_shadow_jury_to_sentencing_guilty(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("shadow_jury", self.get_state(verdict="Guilty")) == "sentencing"
 
     def test_shadow_jury_to_sentencing_liable(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("shadow_jury", self.get_state(verdict="Liable")) == "sentencing"
 
     def test_shadow_jury_to_reporter_not_guilty(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("shadow_jury", self.get_state(verdict="Not Guilty")) == "reporter"
 
     def test_sentencing_to_reporter(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("sentencing", self.get_state()) == "reporter"
 
     def test_reporter_to_done(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("reporter", self.get_state()) == "done"
 
     def test_unknown_step_returns_done(self):
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
         assert _next_step_after("nonexistent", self.get_state()) == "done"
 
     def test_complete_live_step_chain(self):
         """Verify the routing chain from discovery to done, simulating queue changes."""
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
 
         # Empty witness queue, no verdict set (deliberation loops unless rounds >= 3)
         state = self.get_state(witness_queue=[])
@@ -149,7 +149,7 @@ class TestPhaseTransitionRouting:
 
     def test_linear_chain_with_verdict(self):
         """With a verdict set, deliberation exits and chain is fully linear."""
-        from legalis.agents import _next_step_after
+        from legalist.agents import _next_step_after
 
         state = self.get_state(witness_queue=[], verdict="Guilty")
         assert _next_step_after("closing", state) == "shadow_jury"
@@ -160,7 +160,7 @@ class TestPhaseTransitionRouting:
 
     def test_guilty_chain_includes_sentencing(self):
         """With a Guilty verdict, the chain includes sentencing."""
-        from legalis.agents import _LIVE_STEPS, _next_step_after
+        from legalist.agents import _LIVE_STEPS, _next_step_after
         step = "discovery"
         state = self.get_state(verdict="Guilty")
         steps_visited = [step]
@@ -180,7 +180,7 @@ class TestPhaseTransitionRouting:
 
 class TestDemoScript:
     def test_vance_case_loads(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         assert "vance" in DEMO_CASES
         case = DEMO_CASES["vance"]
         assert case["title"] == "State v. Emilia Vance — Double Homicide by Arson"
@@ -188,7 +188,7 @@ class TestDemoScript:
         assert len(case["questions"]) == 5
 
     def test_vance_script_has_all_phases(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         phases = set(m["phase"] for m in script)
         expected = {
@@ -199,7 +199,7 @@ class TestDemoScript:
         assert phases == expected, f"Missing: {expected - phases}, Extra: {phases - expected}"
 
     def test_vance_script_phases_in_order(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         seen = []
         expected_order = [
@@ -214,13 +214,13 @@ class TestDemoScript:
         assert seen == expected_order
 
     def test_vance_script_has_bailiff_announcements(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         bailiff_count = sum(1 for m in script if m["agent"] == "Bailiff")
         assert bailiff_count >= 12, f"Expected >=12 Bailiff announcements, got {bailiff_count}"
 
     def test_vance_script_has_expert_qualification(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         # Look for expert qualification dialogue: Dr. Chen stating credentials
         has_credentials = any(
@@ -237,7 +237,7 @@ class TestDemoScript:
         assert has_qualified, "Missing expert qualification ruling"
 
     def test_vance_script_has_impeachment(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         has_perjury = any(
             "perjury" in m["text"].lower() for m in script
@@ -254,7 +254,7 @@ class TestDemoScript:
         assert has_credibility, "Missing credibility challenge"
 
     def test_vance_script_has_structured_objections(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         # Should have at least 3 objection types
         objection_types = []
@@ -271,7 +271,7 @@ class TestDemoScript:
         assert "prejudicial" in objection_types, "Missing prejudicial objection"
 
     def test_vance_script_has_hearsay_exception(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         has_business_records = any(
             "803(6)" in m["text"] for m in script
@@ -279,7 +279,7 @@ class TestDemoScript:
         assert has_business_records, "Missing business records hearsay exception"
 
     def test_vance_script_has_redirect_examination(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         has_redirect = any(
             "redirect" in m["text"].lower() for m in script
@@ -287,7 +287,7 @@ class TestDemoScript:
         assert has_redirect, "Missing redirect examination"
 
     def test_vance_script_has_rebuttal_and_surrebuttal(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         rebuttal_msgs = [m for m in script if m["phase"] == "Rebuttal"]
         assert len(rebuttal_msgs) >= 4, f"Expected >=4 rebuttal messages, got {len(rebuttal_msgs)}"
@@ -297,7 +297,7 @@ class TestDemoScript:
         assert has_surrebuttal, "Missing surrebuttal"
 
     def test_vance_script_has_sentencing(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         sentencing_msgs = [m for m in script if m["phase"] == "Sentencing"]
         assert len(sentencing_msgs) >= 3, f"Expected >=3 sentencing messages, got {len(sentencing_msgs)}"
@@ -311,18 +311,18 @@ class TestDemoScript:
         assert has_mitigation, "Missing mitigation argument"
 
     def test_vance_script_has_shadow_jury(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         script = DEMO_CASES["vance"]["trial_script"]
         shadow_msgs = [m for m in script if m["phase"] == "Shadow Jury"]
         # 5 shadow jurors + bailiff announcements
         assert len(shadow_msgs) >= 6, f"Expected >=6 shadow jury messages, got {len(shadow_msgs)}"
 
     def test_vance_verdict_is_guilty(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         assert DEMO_CASES["vance"]["verdict"] == "GUILTY"
 
     def test_vance_has_sentence_dict(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         sentence = DEMO_CASES["vance"]["sentence"]
         assert "term" in sentence
         assert "rationale" in sentence
@@ -433,7 +433,7 @@ class TestTrialState:
 
     def test_state_with_vance_case(self):
         from src.state import create_initial_state
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         case = DEMO_CASES["vance"]
         state = create_initial_state(
             case_description=case["description"],
@@ -662,7 +662,7 @@ class TestReporterNode:
 
 class TestBailiffAnnouncements:
     def test_opening_phase_has_bailiff_begin(self, mock_state):
-        from legalis.agents import run_trial_step
+        from legalist.agents import run_trial_step
         with patch("src.nodes.opening_statements_node") as mock_node:
             mock_node.return_value = {
                 "transcript": [AIMessage(content="Opening statement", name="Prosecutor")]
@@ -674,7 +674,7 @@ class TestBailiffAnnouncements:
             assert "opening statements" in begin_msg["text"].lower()
 
     def test_evidence_phase_has_bailiff_begin(self, mock_state):
-        from legalis.agents import run_trial_step
+        from legalist.agents import run_trial_step
         with patch("src.nodes.evidence_node") as mock_node:
             mock_node.return_value = {
                 "transcript": [AIMessage(content="Evidence", name="Prosecutor")]
@@ -684,7 +684,7 @@ class TestBailiffAnnouncements:
             assert begin_msg["agent"] == "Bailiff"
 
     def test_completion_has_bailiff_transition(self, mock_state):
-        from legalis.agents import run_trial_step
+        from legalist.agents import run_trial_step
         with patch("src.nodes.opening_statements_node") as mock_node:
             mock_node.return_value = {
                 "transcript": [AIMessage(content="Opening", name="Prosecutor")]
@@ -696,7 +696,7 @@ class TestBailiffAnnouncements:
             assert "proceed" in transition_msg["text"].lower()
 
     def test_done_step_has_bailiff_adjournment(self, mock_state):
-        from legalis.agents import run_trial_step
+        from legalist.agents import run_trial_step
         mock_state["main_verdict"] = None
         with patch("src.nodes.reporter_node") as mock_node:
             mock_node.return_value = {
@@ -716,11 +716,11 @@ class TestBailiffAnnouncements:
 
 class TestAllDemoCases:
     def test_count(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         assert len(DEMO_CASES) == 3
 
     def test_all_have_required_fields(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         required = ["title", "jurisdiction", "description", "questions",
                      "trial_script", "verdict", "win_probability", "sensitivity",
                      "shadow_jury_narrative"]
@@ -729,7 +729,7 @@ class TestAllDemoCases:
                 assert field in case, f"Case '{key}' missing field '{field}'"
 
     def test_all_trial_scripts_are_valid(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         for key, case in DEMO_CASES.items():
             script = case["trial_script"]
             assert len(script) > 0, f"Case '{key}' has empty trial_script"
@@ -740,7 +740,7 @@ class TestAllDemoCases:
                 assert msg["text"], f"Case '{key}' msg #{i} has empty text"
 
     def test_all_shadow_jury_narratives(self):
-        from legalis.data import DEMO_CASES
+        from legalist.data import DEMO_CASES
         for key, case in DEMO_CASES.items():
             narratives = case["shadow_jury_narrative"]
             assert len(narratives) > 0, f"Case '{key}' has no shadow jury"

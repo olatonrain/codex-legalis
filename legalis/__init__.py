@@ -1,1 +1,1 @@
-# Legalis – professional package root
+# legalist – professional package root

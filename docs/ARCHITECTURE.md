@@ -2,6 +2,11 @@
 
 ## System Diagram
 
+![Codex legalist Architecture Diagram](./architecture_diagram.png)
+
+> Visual overview of how Qwen Cloud connects to the FastAPI backend, LangGraph orchestration, and Agent Society.
+> The Mermaid source below is kept for reference and CI tooling.
+
 ```mermaid
 flowchart TD
     subgraph FRONTEND["Frontend — Browser"]
@@ -16,7 +21,7 @@ flowchart TD
 
     subgraph ORCHESTRATION["Orchestration — LangGraph"]
         GRAPH["src/graph.py<br/>StateGraph + TrialState"]
-        RUNNER["legalis/agents.py<br/>run_trial_step() · dramatic opening"]
+        RUNNER["legalist/agents.py<br/>run_trial_step() · dramatic opening"]
     end
 
     subgraph AGENTS["Agent Society — 11 Specialised Qwen Agents"]

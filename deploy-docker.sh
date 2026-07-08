@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────
-#  deploy-docker.sh  —  Codex Legalis Docker Deployment Script
+#  deploy-docker.sh  —  Codex legalist Docker Deployment Script
 # ─────────────────────────────────────────────────────────────────
 set -e
 
@@ -9,14 +9,14 @@ git fetch --all
 git reset --hard origin/main
 
 echo "=> Building Docker image..."
-docker build --no-cache -t codex-legalis .
+docker build --no-cache -t codex-legalist .
 
 echo "=> Stopping and removing old container (if exists)..."
-docker rm -f legalis_app || true
+docker rm -f legalist_app || true
 
 echo "=> Starting new Docker container on port 8000..."
-docker run -d --name legalis_app -p 8000:8000 --restart unless-stopped codex-legalis
+docker run -d --name legalist_app -p 8000:8000 --restart unless-stopped codex-legalist
 
 echo ""
 echo "✅ Deployment complete! The app is running on port 8000."
-echo "   Run 'docker logs -f legalis_app' to view live logs."
+echo "   Run 'docker logs -f legalist_app' to view live logs."

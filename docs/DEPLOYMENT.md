@@ -68,8 +68,8 @@ QWEN_AUDIO_MODELS=qwen-omni-turbo,qwen3-omni-flash,qwen-audio-turbo
 The codebase contains **zero** references to competing AI providers:
 
 ```bash
-grep -r "api.openai.com"      src/ legalis/ server.py  # Returns nothing
-grep -r "anthropic"           src/ legalis/ server.py  # Returns nothing
+grep -r "api.openai.com"      src/ legalist/ server.py  # Returns nothing
+grep -r "anthropic"           src/ legalist/ server.py  # Returns nothing
 grep -r "generativelanguage"  src/                     # Returns nothing
 grep -r "google-gemini"       src/                     # Returns nothing
 ```
@@ -91,9 +91,9 @@ The `openai` and `langchain-openai` packages are used exclusively as the compati
 
 ## Live Deployment on Alibaba Cloud ECS
 
-Codex Legalis is currently deployed and running live on an Alibaba Cloud ECS instance.
+Codex legalist is currently deployed and running live on an Alibaba Cloud ECS instance.
 
-- **Live URL:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalis.vercel.app/](https://codex-legalis.vercel.app/)
+- **Live URL:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalist.vercel.app/](https://codex-legalist.vercel.app/)
 - **Deployment Method:** Docker container running on Ubuntu 24.04 (Alibaba ECS)
 - **Instance IP:** `47.237.180.168`
 

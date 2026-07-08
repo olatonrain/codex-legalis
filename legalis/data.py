@@ -1,5 +1,5 @@
 """
-legalis/data.py
+legalist/data.py
 ───────────────
 Static demo-case data and agent styling constants.
 Pulled out of server.py so the server layer stays thin.

@@ -1,7 +1,7 @@
 /**
  * static/app.js
  * ─────────────
- * Codex Legalis — Frontend Runtime
+ * Codex legalist — Frontend Runtime
  *
  * Handles:
  *  - Demo case streaming (replays scripted trial step-by-step)
@@ -2341,13 +2341,13 @@ function renderBenchmarkView() {
   renderBenchmarkBarChart("benchCitationsChart", [
     { label: "Raw LLM", value: rawCitations, max: Math.max(rawCitations, singleCitations, multiCitations, 1), cls: "" },
     { label: "Single-Agent", value: singleCitations, max: Math.max(rawCitations, singleCitations, multiCitations, 1), cls: "" },
-    { label: "Codex Legalis", value: multiCitations, max: Math.max(rawCitations, singleCitations, multiCitations, 1), cls: "bar-success" },
+    { label: "Codex legalist", value: multiCitations, max: Math.max(rawCitations, singleCitations, multiCitations, 1), cls: "bar-success" },
   ]);
   
   renderBenchmarkBarChart("benchHallucChart", [
     { label: "Raw LLM", value: rawHalluc, max: Math.max(rawHalluc, singleHalluc, multiHalluc, 1), cls: rawHalluc > singleHalluc ? "bar-danger" : "bar-warning" },
     { label: "Single-Agent", value: singleHalluc, max: Math.max(rawHalluc, singleHalluc, multiHalluc, 1), cls: "bar-warning" },
-    { label: "Codex Legalis", value: multiHalluc, max: Math.max(rawHalluc, singleHalluc, multiHalluc, 1), cls: "bar-success" },
+    { label: "Codex legalist", value: multiHalluc, max: Math.max(rawHalluc, singleHalluc, multiHalluc, 1), cls: "bar-success" },
   ]);
   
   // Update sample responses
@@ -2947,7 +2947,7 @@ function buildTrialReport() {
   const excluded = State.graphState?.excluded_evidence || [];
   const verdict = State.verdictData?.verdict || State.graphState?.main_verdict || "Pending";
   const lines = [
-    "CODEX LEGALIS TRIAL REPORT",
+    "CODEX legalist TRIAL REPORT",
     `Case: ${State.caseTitle || "Untitled case"}`,
     `Jurisdiction: ${State.jurisdiction || State.country}`,
     `Case type: ${State.caseType}`,
@@ -2981,9 +2981,9 @@ function exportTrialReport() {
   const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const slug = (State.caseTitle || "codex-legalis-trial").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const slug = (State.caseTitle || "codex-legalist-trial").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   a.href = url;
-  a.download = `${slug || "codex-legalis-trial"}-report.txt`;
+  a.download = `${slug || "codex-legalist-trial"}-report.txt`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -3058,7 +3058,7 @@ function populateLegalReference(country) {
 
 // ── Case Docket (localStorage persistence) ────────────────────────────────────
 
-const DOCKET_KEY = "legalis_case_docket";
+const DOCKET_KEY = "legalist_case_docket";
 
 function saveTrialToDocket() {
   const caseTitle = State.caseTitle || "Untitled Case";

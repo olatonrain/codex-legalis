@@ -1,5 +1,5 @@
 """
-Prompt templates for all agents in Codex Legalis.
+Prompt templates for all agents in Codex legalist.
 
 Each template receives a `jx` dict (jurisdiction context) with these keys:
     country, system, procedure, criminal_standard, civil_standard,

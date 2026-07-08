@@ -1,6 +1,6 @@
 # Safety
 
-Codex Legalis implements three layers of safety guardrails to prevent hallucinations, prompt injection, and fabrication from insufficient facts.
+Codex legalist implements three layers of safety guardrails to prevent hallucinations, prompt injection, and fabrication from insufficient facts.
 
 ---
 

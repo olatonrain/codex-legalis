@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────
-#  deploy.sh  —  Codex Legalis v1.0.0 Deployment Script
+#  deploy.sh  —  Codex legalist v1.0.0 Deployment Script
 #  Usage:  ./deploy.sh [--port 8000] [--no-reload]
 # ─────────────────────────────────────────────────────────────────
 set -e
@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo ""
-echo "  ⚖  Codex Legalis — Deployment"
+echo "  ⚖  Codex legalist — Deployment"
 echo "  ────────────────────────────────"
 echo "  Project root : $SCRIPT_DIR"
 echo "  Port         : $PORT"
@@ -66,7 +66,7 @@ echo "=> Checking for processes on port $PORT…"
 lsof -ti :"$PORT" | xargs kill -9 2>/dev/null || true
 
 # ── Start server ──────────────────────────────────────────────────
-echo "=> Starting Codex Legalis on http://localhost:$PORT"
+echo "=> Starting Codex legalist on http://localhost:$PORT"
 echo "   Press Ctrl+C to stop."
 echo ""
 

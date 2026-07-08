@@ -1,4 +1,4 @@
-from legalis.parser import extract_text
+from legalist.parser import extract_text
 
 
 class TestParser:

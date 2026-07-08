@@ -1,7 +1,7 @@
 """
 server.py
 ─────────
-FastAPI backend for Codex Legalis.
+FastAPI backend for Codex legalist.
 
 Endpoints
 ─────────
@@ -47,9 +47,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from legalis.data import DEMO_CASES
-from legalis.parser import extract_text
-from legalis.agents import generate_dramatic_opening, run_trial_step
+from legalist.data import DEMO_CASES
+from legalist.parser import extract_text
+from legalist.agents import generate_dramatic_opening, run_trial_step
 from src.config import JURISDICTIONS, COUNTRY_LIST, DEFAULT_COUNTRY
 from src.security import detect_prompt_injection
 from src.logger import get_logger
@@ -58,7 +58,7 @@ logger = get_logger(__name__)
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
-app = FastAPI(title="Codex Legalis API", version="1.0.0")
+app = FastAPI(title="Codex legalist API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -764,7 +764,7 @@ class BenchmarkRequest(BaseModel):
 @app.post("/api/benchmark/run")
 def run_benchmark(req: BenchmarkRequest):
     try:
-        from legalis.benchmark import run_raw_llm_query, run_single_agent_trial, run_multi_agent_trial
+        from legalist.benchmark import run_raw_llm_query, run_single_agent_trial, run_multi_agent_trial
         
         raw_results = []
         single_results = []

@@ -1,8 +1,8 @@
-# Codex Legalis — Autonomous Courtroom Simulation
+# Codex legalist — Autonomous Courtroom Simulation
 
 > A Qwen Cloud Agent Society that runs a full, adversarial legal trial.
 
-**Codex Legalis** distributes legal labour across 11 specialised Qwen agents — Magistrate, Judge, Prosecutor, Defence Counsel, Witnesses, Fact Checker, and a full Jury — who debate, object, testify, and deliberate autonomously on user-provided case facts. The result is a Shadow Jury Simulation that computes a mathematically grounded win-probability, not a single model's guess.
+**Codex legalist** distributes legal labour across 11 specialised Qwen agents — Magistrate, Judge, Prosecutor, Defence Counsel, Witnesses, Fact Checker, and a full Jury — who debate, object, testify, and deliberate autonomously on user-provided case facts. The result is a Shadow Jury Simulation that computes a mathematically grounded win-probability, not a single model's guess.
 
 ---
 
@@ -14,7 +14,7 @@
 
 ## Live Demo
 
-**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalis.vercel.app/](https://codex-legalis.vercel.app/)
+**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalist.vercel.app/](https://codex-legalist.vercel.app/)
 
 _(Hosted on Alibaba Cloud ECS)_
 
@@ -22,7 +22,7 @@ _(Hosted on Alibaba Cloud ECS)_
 
 ## Demo Video
 
-[![Codex Legalis Demo](https://img.youtube.com/vi/hwRAtOsYiWk/0.jpg)](https://youtu.be/hwRAtOsYiWk)
+[![Codex legalist Demo](https://img.youtube.com/vi/hwRAtOsYiWk/0.jpg)](https://youtu.be/hwRAtOsYiWk)
 
 ---
 
@@ -35,8 +35,8 @@ _Link to be added_
 ## Quickstart
 
 ```bash
-git clone https://github.com/olatonrain/codex-legalis.git
-cd codex-legalis
+git clone https://github.com/olatonrain/codex-legalist.git
+cd codex-legalist
 
 cp .env.example .env
 # Edit .env and add your QWEN_API_KEY
@@ -54,7 +54,7 @@ Open [http://localhost:8000](http://localhost:8000).
 | ------------------------------------ | ---------------------------------------------------------- |
 | [Architecture](docs/ARCHITECTURE.md) | System diagram, tech stack, agent roles, trial phases      |
 | [Deployment](docs/DEPLOYMENT.md)     | Alibaba Cloud proof, Qwen Cloud config, compliance         |
-| [Benchmark](docs/BENCHMARK.md)       | Raw LLM vs Single-Agent vs Codex Legalis comparison        |
+| [Benchmark](docs/BENCHMARK.md)       | Raw LLM vs Single-Agent vs Codex legalist comparison       |
 | [Usage](docs/USAGE.md)               | How to run trials, demo cases, file upload, API reference  |
 | [Safety](docs/SAFETY.md)             | Anti-hallucination, prompt injection defence, record gates |
 
