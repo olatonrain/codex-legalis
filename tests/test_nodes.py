@@ -39,15 +39,29 @@ class TestEvidenceNode:
 
     def test_sufficient_facts_calls_llm(self, mock_state):
         mock_state["case_description"] = "The defendant stole a car from the parking lot at midnight."
-        mock_ruling = MagicMock()
-        mock_ruling.ruling = "OVERRULED"
-        mock_ruling.rationale = "Evidence is relevant and admissible"
-        mock_llm_instance = MagicMock()
-        mock_llm_instance.invoke.return_value = MagicMock(content="Mocked LLM response")
-        mock_structured_instance = MagicMock()
-        mock_structured_instance.invoke.return_value = mock_ruling
-        with patch("src.nodes.get_llm", return_value=mock_llm_instance), \
-             patch("src.nodes.get_structured_llm", return_value=mock_structured_instance):
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = MagicMock(content="Mocked LLM response")
+
+        no_objection = MagicMock()
+        no_objection.should_object = False
+        no_objection.objection_type = ""
+        no_objection.rule_cited = ""
+        no_objection.rationale = ""
+        no_objection.foundation_missing = ""
+
+        from src.nodes import ObjectionOutput, JudgeRuling, EvidenceObjectionDecision
+
+        def structured_invoke(messages=None, **kwargs):
+            sys = str(messages[0].content) if messages else ""
+            if "objection" in sys.lower() or "defect" in sys.lower():
+                return EvidenceObjectionDecision(should_object=False, objection_type="", rule_cited="", rationale="", foundation_missing="")
+            return JudgeRuling(ruling="OVERRULED", rationale="Evidence is relevant", objection_type="", limiting_instruction="")
+
+        mock_structured = MagicMock()
+        mock_structured.invoke = MagicMock(side_effect=structured_invoke)
+
+        with patch("src.nodes.get_llm", return_value=mock_llm), \
+             patch("src.nodes.get_structured_llm", return_value=mock_structured):
             result = evidence_node(mock_state)
         assert len(result["transcript"]) >= 3
 

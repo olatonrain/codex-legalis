@@ -21,7 +21,9 @@ class TestLiveSteps:
         assert "motions" in _LIVE_STEPS
         assert "opening" in _LIVE_STEPS
         assert "evidence" in _LIVE_STEPS
-        assert "witness" in _LIVE_STEPS
+        assert "witness_direct" in _LIVE_STEPS
+        assert "witness_cross" in _LIVE_STEPS
+        assert "witness_redirect" in _LIVE_STEPS
         assert "rebuttal" in _LIVE_STEPS
         assert "closing" in _LIVE_STEPS
         assert "jury_instructions" in _LIVE_STEPS
@@ -66,20 +68,30 @@ class TestPhaseTransitionRouting:
         from legalist.agents import _next_step_after
         assert _next_step_after("opening", self.get_state()) == "evidence"
 
-    def test_evidence_to_witness(self):
+    def test_evidence_to_witness_direct(self):
         from legalist.agents import _next_step_after
         state = self.get_state(witness_queue=["Dr. Chen"])
-        assert _next_step_after("evidence", state) == "witness"
+        assert _next_step_after("evidence", state) == "witness_direct"
 
-    def test_witness_loops_with_queue(self):
+    def test_witness_direct_to_cross(self):
         from legalist.agents import _next_step_after
-        state = self.get_state(witness_queue=["Dr. Chen", "Paul Brennan"])
-        assert _next_step_after("witness", state) == "witness"
+        state = self.get_state(witness_queue=["Dr. Chen"])
+        assert _next_step_after("witness_direct", state) == "witness_cross"
 
-    def test_witness_to_rebuttal_empty_queue(self):
+    def test_witness_cross_to_redirect(self):
+        from legalist.agents import _next_step_after
+        state = self.get_state(witness_queue=["Dr. Chen"])
+        assert _next_step_after("witness_cross", state) == "witness_redirect"
+
+    def test_witness_redirect_loops_with_queue(self):
+        from legalist.agents import _next_step_after
+        state = self.get_state(witness_queue=["Paul Brennan"])
+        assert _next_step_after("witness_redirect", state) == "witness_direct"
+
+    def test_witness_redirect_to_rebuttal_empty_queue(self):
         from legalist.agents import _next_step_after
         state = self.get_state(witness_queue=[])
-        assert _next_step_after("witness", state) == "rebuttal"
+        assert _next_step_after("witness_redirect", state) == "rebuttal"
 
     def test_rebuttal_to_closing(self):
         from legalist.agents import _next_step_after
@@ -356,14 +368,14 @@ class TestGraphRouting:
         assert check_security(state) == "archivist"
 
     def test_witness_loop_continues(self):
-        from src.graph import check_more_witnesses
+        from src.graph import check_has_witnesses
         state = self.get_state(witness_queue=["Dr. Chen", "Paul Brennan"])
-        assert check_more_witnesses(state) == "witness_examination"
+        assert check_has_witnesses(state) == "witness_direct"
 
     def test_witness_loop_ends(self):
-        from src.graph import check_more_witnesses
+        from src.graph import check_has_witnesses
         state = self.get_state(witness_queue=[])
-        assert check_more_witnesses(state) == "rebuttal_evidence"
+        assert check_has_witnesses(state) == "rebuttal_evidence"
 
     def test_check_closing_with_verdict(self):
         from src.graph import check_closing
@@ -462,7 +474,8 @@ class TestGraphCompilation:
         nodes = app.get_graph().nodes
         expected_nodes = [
             "security_check", "magistrate", "discovery", "human_input",
-            "motions", "opening_statements", "evidence", "witness_examination",
+            "motions", "opening_statements", "evidence",
+            "witness_direct", "witness_cross", "witness_redirect",
             "rebuttal_evidence", "closing_arguments", "jury_instructions",
             "jury_deliberation", "shadow_jury", "sentencing", "reporter",
             "archivist", "__start__", "__end__",
