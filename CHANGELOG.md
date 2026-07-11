@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented here.
 
+## 2026-07-11 (session 4)
+
+### Fixed
+- **Module load failure** — three bugs fixed in ES module split:
+  - `SAMPLE` in state.js export list (not defined in source) — removed phantom export
+  - `initTheme` in state.js export list (named IIFE, not a module binding) — removed from exports and all import statements
+  - `JX_DATA` reassignment in ui.js `loadJurisdictions` (imported bindings are read-only in ES modules) — changed to `Object.assign`
+- **Insight functions missing** — `requestInsights`, `renderInsightResults`, `initInsightButtons`, `toggleInsightExpand` added to jury.js (were never in committed app.js, only in session 2's lost working tree)
+
+### Added
+- `src/__init__.py` — makes `src/` a regular package (was implicit namespace, caused Vercel import failures)
+
 ## 2026-07-11 (session 3)
 
 ### Changed

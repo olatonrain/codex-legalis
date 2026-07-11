@@ -239,7 +239,7 @@ export {
     AV_CLASS,
     JX_DATA,
     DOCKET_KEY,
-    SAMPLE,
+
     showToast,
     sleep,
     escapeHtml,
@@ -248,7 +248,6 @@ export {
     classifyStance,
     formatDuration,
     extractExhibitLabel,
-    initTheme,
     toggleTheme,
     updateThemeIcon
 };

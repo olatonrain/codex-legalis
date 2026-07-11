@@ -1,7 +1,7 @@
 "use strict";
 // ── UI module — extracted from static/app.js ──
 
-import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, AGENT_ABBR, AGENT_COLOR, AV_CLASS, JX_DATA, safeJson, initTheme, toggleTheme } from './state.js';
+import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, AGENT_ABBR, AGENT_COLOR, AV_CLASS, JX_DATA, safeJson, toggleTheme } from './state.js';
 import { clearTranscript, addTranscriptEntry, addSystemMessage, streamLines, importTranscriptFromGraphState, handleEvidenceFromEntry, syncEvidenceFromState, exportTranscript } from './transcript.js';
 import { renderEvidenceBoard, renderObjectionHistory, renderClerkSummary, renderMotionRulings, renderDiscoverySummary } from './evidence.js';
 import { buildLiveDeliberationSnapshot, renderShadowJuryConversation, renderVerdictView, renderVerdictCharts, renderJuryGrid, renderDeliberationView, renderConsensusRows, renderDeliberationTranscript, renderCaseRecordSummary, renderMiniChart, requestInsights, renderInsightResults, initInsightButtons, toggleInsightExpand } from './jury.js';
@@ -397,7 +397,7 @@ async function loadJurisdictions() {
   try {
     const res = await fetch("/api/jurisdictions");
     const data = await safeJson(res);
-    JX_DATA = data.data || {};
+    Object.assign(JX_DATA, data.data || {});
     const sel = $("countrySelect");
     if (sel) {
       data.countries.forEach(c => {

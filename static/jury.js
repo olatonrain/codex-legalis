@@ -1,7 +1,7 @@
 "use strict";
 // ── JURY module — extracted from static/app.js ──
 
-import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, AGENT_ABBR, AGENT_COLOR, AV_CLASS, JX_DATA, safeJson, initTheme, toggleTheme } from './state.js';
+import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, AGENT_ABBR, AGENT_COLOR, AV_CLASS, JX_DATA, safeJson, toggleTheme } from './state.js';
 import { addTranscriptEntry } from './transcript.js';
 
 
@@ -520,6 +520,150 @@ function renderCaseRecordSummary() {
   el.innerHTML = items.map(item => `<div class="precedent-item">${item}</div>`).join("");
 }
 
+// ── Counsel Insights ───────────────────────────────────────────────────────────
+
+function requestInsights() {
+    const btn = document.getElementById("generateInsightsBtn");
+    if (!btn || btn.disabled) return;
+
+    const perspectives = [];
+    if (document.getElementById("insightDefense")?.checked) perspectives.push("defense");
+    if (document.getElementById("insightProsecution")?.checked) perspectives.push("prosecution");
+    if (document.getElementById("insightJudge")?.checked) perspectives.push("judge");
+
+    if (!perspectives.length) {
+        showToast("Select at least one perspective.", "warning");
+        return;
+    }
+
+    if (!State.graphState || Object.keys(State.graphState).length === 0) {
+        showToast("No trial data available. Run a trial first.", "warning");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    const loading = document.getElementById("insightLoading");
+    const results = document.getElementById("insightResults");
+    if (loading) loading.style.display = "";
+    if (results) results.innerHTML = "";
+
+    fetch("/api/trial/insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            graph_state: State.graphState,
+            perspectives: perspectives,
+        }),
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (loading) loading.style.display = "none";
+            renderInsightResults(data.insights || {});
+        })
+        .catch((err) => {
+            if (loading) loading.style.display = "none";
+            if (results)
+                results.innerHTML = '<div style="padding:20px;text-align:center;color:var(--prosecutor);"><i class="fas fa-exclamation-triangle"></i> Request failed: ' + escapeHtml(err.message) + "</div>";
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lightbulb"></i> Generate Insights';
+        });
+}
+
+function renderInsightResults(insights) {
+    const container = document.getElementById("insightResults");
+    if (!container) return;
+
+    const entries = Object.entries(insights);
+    if (!entries.length) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">No insights were returned.</div>';
+        return;
+    }
+
+    const LABELS = {
+        defense: { icon: "&#9660;", label: "Defense Counsel", color: "var(--defense)" },
+        prosecution: { icon: "&#9650;", label: "Prosecution", color: "var(--prosecutor)" },
+        judge: { icon: "&#9878;", label: "Judge's Counsel", color: "var(--judge)" },
+    };
+
+    container.innerHTML = entries
+        .map(([key, data]) => {
+            const meta = LABELS[key] || { icon: "", label: key, color: "var(--text)" };
+            if (data.error) {
+                return '<div style="margin-bottom:12px;padding:12px;border-radius:8px;border:1px solid rgba(255,69,58,0.3);background:rgba(255,69,58,0.05);"><div style="font-weight:600;color:' + meta.color + ";margin-bottom:6px;\">" + meta.icon + " " + meta.label + '</div><div style="font-size:0.82rem;color:var(--prosecutor);"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(data.error) + "</div></div>";
+            }
+            const summary = escapeHtml(data.summary || "");
+            const strengths = (data.key_strengths || []).map(function(s) { return escapeHtml(s); });
+            const weaknesses = (data.key_weaknesses || []).map(function(s) { return escapeHtml(s); });
+            const recommendations = (data.recommendations || []).map(function(s) { return escapeHtml(s); });
+            const isJudge = key === "judge";
+
+            return '<div class="insight-card" data-perspective="' + key + '" style="margin-bottom:14px;border-radius:8px;border:1px solid var(--border);overflow:hidden;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);cursor:pointer;" onclick="toggleInsightExpand(\'' + key + "')\">" +
+                '<div style="font-weight:700;font-size:0.88rem;color:' + meta.color + ';">' + meta.icon + " " + meta.label + "</div>" +
+                '<div style="color:var(--muted);font-size:0.75rem;">' +
+                '<i class="fas fa-chevron-down" id="insightChevron-' + key + '"></i>' +
+                "</div>" +
+                "</div>" +
+                '<div id="insightBody-' + key + '" style="padding:' + (isJudge ? "0" : "14px") + ";" + (isJudge ? "max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s ease;" : "") + '">' +
+                (isJudge ? "" :
+                    '<div style="margin-bottom:12px;font-size:0.85rem;line-height:1.5;color:var(--text);">' + summary + "</div>" +
+                    '<div style="margin-bottom:12px;">' +
+                    '<div style="font-size:0.72rem;font-weight:700;color:var(--defense);text-transform:uppercase;margin-bottom:6px;"><i class="fas fa-check-circle"></i> Key Strengths</div>' +
+                    "<ul style=\"margin:0;padding-left:18px;font-size:0.82rem;line-height:1.6;\">" +
+                    strengths.map(function(s) { return "<li style=\"color:var(--text);\">" + s + "</li>"; }).join("") +
+                    "</ul>" +
+                    "</div>" +
+                    '<div style="margin-bottom:12px;">' +
+                    '<div style="font-size:0.72rem;font-weight:700;color:var(--prosecutor);text-transform:uppercase;margin-bottom:6px;"><i class="fas fa-exclamation-triangle"></i> Key Weaknesses</div>' +
+                    "<ul style=\"margin:0;padding-left:18px;font-size:0.82rem;line-height:1.6;\">" +
+                    weaknesses.map(function(s) { return "<li style=\"color:var(--text);\">" + s + "</li>"; }).join("") +
+                    "</ul>" +
+                    "</div>" +
+                    "<div>" +
+                    '<div style="font-size:0.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;margin-bottom:6px;"><i class="fas fa-lightbulb"></i> Recommendations</div>' +
+                    "<ul style=\"margin:0;padding-left:18px;font-size:0.82rem;line-height:1.6;\">" +
+                    recommendations.map(function(s) { return "<li style=\"color:var(--text);\">" + s + "</li>"; }).join("") +
+                    "</ul>" +
+                    "</div>"
+                ) +
+                "</div>" +
+                "</div>"
+            ;
+        })
+        .join("");
+
+    entries.forEach(function(entry) {
+        var key = entry[0];
+        if (key !== "judge") toggleInsightExpand(key, true);
+    });
+}
+
+function initInsightButtons() {
+    var btn = document.getElementById("generateInsightsBtn");
+    if (btn) btn.addEventListener("click", requestInsights);
+}
+
+function toggleInsightExpand(perspective, forceExpand) {
+    var body = document.getElementById("insightBody-" + perspective);
+    var chevron = document.getElementById("insightChevron-" + perspective);
+    if (!body) return;
+
+    var isCollapsed = body.style.maxHeight === "0px" || body.style.maxHeight === "";
+    var shouldExpand = forceExpand !== undefined ? forceExpand : isCollapsed;
+
+    if (shouldExpand) {
+        body.style.maxHeight = body.scrollHeight + 80 + "px";
+        body.style.padding = "14px";
+        if (chevron) chevron.className = "fas fa-chevron-up";
+    } else {
+        body.style.maxHeight = "0px";
+        body.style.padding = "0 14px";
+        if (chevron) chevron.className = "fas fa-chevron-down";
+    }
+}
 
 export {
     buildLiveDeliberationSnapshot,
