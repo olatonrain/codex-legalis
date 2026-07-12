@@ -98,7 +98,7 @@ flowchart TD
 | Frontend      | Vanilla HTML/CSS/JS    | ES module single-page application              |
 | File Parsing  | pypdf, python-docx     | PDF and DOCX extraction                        |
 | Charts        | Plotly.js              | Verdict gauge, evidence visualisation          |
-| Deploy        | Vercel (serverless)    | Production hosting (auto-detected Python)      |
+| Deploy        | Alibaba Cloud ECS / Docker | Production hosting (automated container runner) |
 
 ---
 
@@ -107,7 +107,7 @@ flowchart TD
 ```
 .
 ├── server.py                 # FastAPI entry point — all API routes
-├── vercel.json               # Vercel serverless config
+├── deploy-docker.sh          # Docker deployment script
 ├── requirements.txt          # Python dependencies
 ├── .env.example              # Environment variable template
 ├── .gitignore

@@ -31,7 +31,7 @@
 
 ## Live Demo
 
-**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000) and also at [https://codex-legalist.vercel.app/](https://codex-legalist.vercel.app/)
+**🟢 Play with the live deployment here:** [http://47.237.180.168:8000](http://47.237.180.168:8000)
 
 _(Hosted on Alibaba Cloud ECS)_
 
