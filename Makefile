@@ -1,10 +1,10 @@
 .PHONY: test lint format format-check run setup setup-dev benchmark benchmark-mock
 
 setup:
-	pip install -r requirements.txt
+	pip install -r requirements-dev.txt
 
 setup-dev:
-	pip install -r requirements.txt && pip install ruff && npm install
+	pip install -r requirements-dev.txt && npm install
 
 test:
 	pytest
