@@ -29,6 +29,9 @@ After running `./deploy.sh`, open [http://localhost:8000](http://localhost:8000)
 | `POST` | `/api/upload`               | Parse an uploaded case file (PDF/DOCX/TXT, max 10 MB) |
 | `POST` | `/api/upload_audio`         | Transcribe an uploaded audio file (max 10 MB)         |
 | `POST` | `/api/benchmark/run`        | Run benchmark comparison                              |
+| `GET`  | `/api/benchmark/run-stream` | Run benchmark with SSE streaming progress             |
+| `POST` | `/api/trial/insight`        | Generate counsel insights from a completed trial      |
+| `GET`  | `/api/trial/transcript`     | Export transcript (JSON/Markdown/TXT)                 |
 
 ---
 

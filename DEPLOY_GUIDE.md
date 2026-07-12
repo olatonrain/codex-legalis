@@ -72,6 +72,7 @@ See `.env.example` for all available configuration:
 | `QWEN_AUDIO_MODELS` | No | Comma-separated fallback chain for audio |
 | `QWEN_TTS_MODEL` | No | TTS model (default: `qwen3-tts-flash`) |
 | `QWEN_TTS_VOICE` | No | TTS voice (options: Cherry, Serena, Ethan, Chloe) |
+| `CORS_ORIGINS` | No | Comma-separated list of allowed origins (default: `*`) |
 
 ## Live Deployment
 
