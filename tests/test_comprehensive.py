@@ -191,17 +191,17 @@ class TestPhaseTransitionRouting:
 # ═══════════════════════════════════════════════════════════════════════
 
 class TestDemoScript:
-    def test_vance_case_loads(self):
+    def test_clinical_case_loads(self):
         from legalist.data import DEMO_CASES
-        assert "vance" in DEMO_CASES
-        case = DEMO_CASES["vance"]
-        assert case["title"] == "State v. Emilia Vance — Double Homicide by Arson"
+        assert "clinical" in DEMO_CASES
+        case = DEMO_CASES["clinical"]
+        assert case["title"] == "State v. Dr. Sarah Blake — Involuntary Manslaughter by Clinical Trial Misconduct"
         assert case["verdict"] == "GUILTY"
         assert len(case["questions"]) == 5
 
-    def test_vance_script_has_all_phases(self):
+    def test_clinical_script_has_all_phases(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         phases = set(m["phase"] for m in script)
         expected = {
             "Discovery", "Motions", "Opening", "Evidence", "Witness",
@@ -210,9 +210,9 @@ class TestDemoScript:
         }
         assert phases == expected, f"Missing: {expected - phases}, Extra: {phases - expected}"
 
-    def test_vance_script_phases_in_order(self):
+    def test_clinical_script_phases_in_order(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         seen = []
         expected_order = [
             "Discovery", "Motions", "Opening", "Evidence", "Witness",
@@ -225,82 +225,80 @@ class TestDemoScript:
                 seen.append(phase)
         assert seen == expected_order
 
-    def test_vance_script_has_bailiff_announcements(self):
+    def test_clinical_script_has_bailiff_announcements(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         bailiff_count = sum(1 for m in script if m["agent"] == "Bailiff")
         assert bailiff_count >= 12, f"Expected >=12 Bailiff announcements, got {bailiff_count}"
 
-    def test_vance_script_has_expert_qualification(self):
+    def test_clinical_script_has_expert_qualification(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
-        # Look for expert qualification dialogue: Dr. Chen stating credentials
+        script = DEMO_CASES["clinical"]["trial_script"]
         has_credentials = any(
-            "22 years of experience" in m["text"] for m in script
+            "years of experience" in m["text"] for m in script
         )
         has_voir_dire = any(
             "voir dire" in m["text"].lower() for m in script
         )
         has_qualified = any(
-            "qualified as an expert" in m["text"].lower() for m in script
+            "qualifies" in m["text"].lower() and "as an expert" in m["text"].lower()
+            for m in script
         )
         assert has_credentials, "Missing expert credentials"
         assert has_voir_dire, "Missing voir dire"
         assert has_qualified, "Missing expert qualification ruling"
 
-    def test_vance_script_has_impeachment(self):
+    def test_clinical_script_has_impeachment(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
-        has_perjury = any(
-            "perjury" in m["text"].lower() for m in script
+        script = DEMO_CASES["clinical"]["trial_script"]
+        has_bias = any(
+            "conflict of interest" in m["text"].lower() for m in script
         )
-        has_fired = any(
-            "fired by" in m["text"].lower() or "terminated" in m["text"].lower()
-            for m in script
+        has_limitation = any(
+            "cannot identify" in m["text"].lower() for m in script
         )
         has_credibility = any(
             "credibility" in m["text"].lower() for m in script
         )
-        assert has_perjury, "Missing perjury impeachment reference"
-        assert has_fired, "Missing bias impeachment reference"
+        assert has_bias, "Missing bias impeachment reference"
+        assert has_limitation, "Missing witness limitation impeachment"
         assert has_credibility, "Missing credibility challenge"
 
-    def test_vance_script_has_structured_objections(self):
+    def test_clinical_script_has_structured_objections(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
-        # Should have at least 3 objection types
-        objection_types = []
+        script = DEMO_CASES["clinical"]["trial_script"]
+        objection_types = set()
         for m in script:
             text = m["text"]
+            if "hearsay" in text.lower() and m["agent"] in ("Defense", "Judge"):
+                objection_types.add("hearsay")
             if "foundation" in text.lower() and m["agent"] in ("Defense", "Judge"):
-                objection_types.append("foundation")
-            elif "hearsay" in text.lower() and m["agent"] in ("Defense", "Judge"):
-                objection_types.append("hearsay")
-            elif "prejudicial" in text.lower() or "403" in text:
-                objection_types.append("prejudicial")
-        assert "foundation" in objection_types, "Missing foundation objection"
-        assert "hearsay" in objection_types, "Missing hearsay objection"
-        assert "prejudicial" in objection_types, "Missing prejudicial objection"
+                objection_types.add("foundation")
+            if "prejudicial" in text.lower() or "403" in text:
+                objection_types.add("prejudicial")
+        assert "foundation" in objection_types, f"Missing foundation objection. Got: {objection_types}"
+        assert "hearsay" in objection_types, f"Missing hearsay objection. Got: {objection_types}"
+        assert "prejudicial" in objection_types, f"Missing prejudicial objection. Got: {objection_types}"
 
-    def test_vance_script_has_hearsay_exception(self):
+    def test_clinical_script_has_hearsay_exception(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         has_business_records = any(
             "803(6)" in m["text"] for m in script
         )
         assert has_business_records, "Missing business records hearsay exception"
 
-    def test_vance_script_has_redirect_examination(self):
+    def test_clinical_script_has_redirect_examination(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         has_redirect = any(
             "redirect" in m["text"].lower() for m in script
         )
         assert has_redirect, "Missing redirect examination"
 
-    def test_vance_script_has_rebuttal_and_surrebuttal(self):
+    def test_clinical_script_has_rebuttal_and_surrebuttal(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         rebuttal_msgs = [m for m in script if m["phase"] == "Rebuttal"]
         assert len(rebuttal_msgs) >= 4, f"Expected >=4 rebuttal messages, got {len(rebuttal_msgs)}"
         has_surrebuttal = any(
@@ -308,9 +306,9 @@ class TestDemoScript:
         )
         assert has_surrebuttal, "Missing surrebuttal"
 
-    def test_vance_script_has_sentencing(self):
+    def test_clinical_script_has_sentencing(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         sentencing_msgs = [m for m in script if m["phase"] == "Sentencing"]
         assert len(sentencing_msgs) >= 3, f"Expected >=3 sentencing messages, got {len(sentencing_msgs)}"
         has_aggravation = any(
@@ -322,20 +320,19 @@ class TestDemoScript:
         assert has_aggravation, "Missing aggravation argument"
         assert has_mitigation, "Missing mitigation argument"
 
-    def test_vance_script_has_shadow_jury(self):
+    def test_clinical_script_has_shadow_jury(self):
         from legalist.data import DEMO_CASES
-        script = DEMO_CASES["vance"]["trial_script"]
+        script = DEMO_CASES["clinical"]["trial_script"]
         shadow_msgs = [m for m in script if m["phase"] == "Shadow Jury"]
-        # 5 shadow jurors + bailiff announcements
         assert len(shadow_msgs) >= 6, f"Expected >=6 shadow jury messages, got {len(shadow_msgs)}"
 
-    def test_vance_verdict_is_guilty(self):
+    def test_clinical_verdict_is_guilty(self):
         from legalist.data import DEMO_CASES
-        assert DEMO_CASES["vance"]["verdict"] == "GUILTY"
+        assert DEMO_CASES["clinical"]["verdict"] == "GUILTY"
 
-    def test_vance_has_sentence_dict(self):
+    def test_clinical_has_sentence_dict(self):
         from legalist.data import DEMO_CASES
-        sentence = DEMO_CASES["vance"]["sentence"]
+        sentence = DEMO_CASES["clinical"]["sentence"]
         assert "term" in sentence
         assert "rationale" in sentence
         assert len(sentence["rationale"]) > 50
@@ -443,10 +440,10 @@ class TestTrialState:
         for field in required:
             assert field in state, f"Missing field: {field}"
 
-    def test_state_with_vance_case(self):
+    def test_state_with_clinical_case(self):
         from src.state import create_initial_state
         from legalist.data import DEMO_CASES
-        case = DEMO_CASES["vance"]
+        case = DEMO_CASES["clinical"]
         state = create_initial_state(
             case_description=case["description"],
             country="United States",

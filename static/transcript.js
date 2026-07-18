@@ -2,7 +2,8 @@
 // ── TRANSCRIPT module — extracted from static/app.js ──
 
 import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, AGENT_ABBR, AGENT_COLOR, AV_CLASS, JX_DATA, safeJson, toggleTheme } from './state.js';
-import { renderObjectionHistory } from './evidence.js';
+import { renderEvidenceBoard, renderObjectionHistory } from './evidence.js';
+import { renderAgentRoster, updateMetricsDisplay } from './ui.js';
 
 function importTranscriptFromGraphState(transcriptList) {
   const container = $("transcript");

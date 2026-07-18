@@ -35,386 +35,27 @@ AGENT_NAME_COLOR: dict[str, str] = {
 
 # ── Demo trial scripts ────────────────────────────────────────────────────────
 DEMO_CASES: dict[str, dict] = {
-    "theft": {
-        "title": "State v. Marcus Webb — Grand Theft Auto",
-        "jurisdiction": "United States · NY Southern District",
+    "ransomware": {
+        "title": "State v. Dmitri Volkov — Ransomware Attack on St. Jude's Hospital",
+        "jurisdiction": "United States · Federal District Court, Southern District",
         "description": (
-            "The defendant, Marcus Webb, is charged with stealing a 2024 Tesla Model Y "
-            "from outside 'The Blue Note' jazz bar on March 14th. A parking-lot camera "
-            "captured a figure matching Webb's build at 11:47 PM. Webb claims he was "
-            "inside until midnight; his alibi is bartender Sarah Lin."
+            "The defendant, Dmitri Volkov, is charged with one count of computer intrusion "
+            "(18 U.S.C. § 1030) and one count of attempted extortion related to the July 12th "
+            "ransomware attack on St. Jude's Medical Center. The attack encrypted 14,000 patient "
+            "records and demanded $4.2 million in Bitcoin. FBI digital forensics traced the "
+            "ransomware deployment to a laptop registered to Volkov, with his SSH keys found in "
+            "the system's authorized_keys file. Volkov claims he was attending the DevSecOps "
+            "conference in Berlin at the time of the attack — he has passport stamps, conference "
+            "badge scans, and hotel key card records placing him there. Defense argues the laptop "
+            "was infected with a remote access trojan (RAT) months prior and his SSH keys could "
+            "have been harvested without his knowledge."
         ),
         "questions": [
-            "Was the security footage clear enough to identify facial features?",
-            "Did Sarah Lin have an unobstructed view of Webb at 11:47 PM?",
-            "Were the defendant's fingerprints found on the vehicle?",
-            "Did Webb have a prior relationship with the vehicle's owner?",
-            "Was any stolen property recovered from Webb's residence?",
-        ],
-        "trial_script": [
-            # ════════════════ PHASE 1: DISCOVERY ════════════════
-            {
-                "agent": "Bailiff",
-                "text": "All rise. The Honorable Justice Vance presiding. The court is now in session for the Discovery Disclosure phase.",
-                "phase": "Discovery",
-            },
-            {
-                "agent": "Judge",
-                "text": "Be seated. State versus Marcus Webb — Grand Theft Auto in the First Degree. We proceed with discovery disclosure. Mr. Mercer.",
-                "phase": "Discovery",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The People disclose: (1) Parking-lot camera footage, Exhibit A, timestamped 11:47 PM March 14th; (2) Vehicle owner statement confirming locked and parked at 9:00 PM; (3) Officer Daniels' incident report.",
-                "phase": "Discovery",
-            },
-            {
-                "agent": "Defense",
-                "text": "The defense discloses: (1) Sworn affidavit from bartender Sarah Lin placing Webb inside The Blue Note bar at 11:30 PM and near midnight; (2) Bar credit card receipt showing Webb's tab active at 11:42 PM.",
-                "phase": "Discovery",
-            },
-            {"agent": "Judge", "text": "Disclosure is complete. Proceed to pre-trial motions.", "phase": "Discovery"},
-            # ════════════════ PHASE 2: PRE-TRIAL MOTIONS ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to pre-trial motions.", "phase": "Motions"},
-            {
-                "agent": "Judge",
-                "text": "Defense counsel, your motion to suppress the parking-lot footage. State your grounds.",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Defense",
-                "text": "Your Honor, the footage is 480p resolution. The figure's face is not identifiable. Under FRE 403, the prejudicial effect of a shadowy silhouette substantially outweighs any probative value. No eyewitness can verify it is Webb.",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The figure's height, build, and gait match the defendant. The footage is time-stamped. The People can cross-reference with the defendant's own clothing. This is not prejudice — it is evidence.",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Judge",
-                "text": "Motion to suppress is DENIED. The deficiencies in quality go to weight, not admissibility. The defense may cross-examine on the footage's limitations. FRE 401.",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The People move to introduce evidence of three prior auto thefts in a three-block radius during the same week, showing pattern, under FRE 404(b).",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Defense",
-                "text": "Objection. No evidence links Webb to those thefts. This is pure character evidence designed to paint my client as a criminal. Highly prejudicial.",
-                "phase": "Motions",
-            },
-            {
-                "agent": "Judge",
-                "text": "Motion DENIED. Without any nexus to the defendant, the prior thefts are irrelevant and would be unfairly prejudicial. FRE 404(b). Stricken.",
-                "phase": "Motions",
-            },
-            # ════════════════ PHASE 3: OPENING STATEMENTS ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to opening statements.", "phase": "Opening"},
-            {"agent": "Judge", "text": "Mr. Mercer — your opening statement.", "phase": "Opening"},
-            {
-                "agent": "Prosecutor",
-                "text": "Ladies and gentlemen — at 11:47 PM on March 14th, a 2024 Tesla Model Y was stolen from outside The Blue Note jazz bar. The evidence will show that Marcus Webb was the man behind that theft. Security camera footage captured a figure matching Webb's height and build at the vehicle at precisely the time of the theft. Webb claims he was inside the bar — but his alibi witness, bartender Sarah Lin, admits she cannot account for his whereabouts during the critical window. The prosecution will prove beyond a reasonable doubt that Marcus Webb committed Grand Theft Auto in the First Degree.",
-                "phase": "Opening",
-            },
-            {"agent": "Judge", "text": "Defense counsel.", "phase": "Opening"},
-            {
-                "agent": "Defense",
-                "text": "Members of the jury — the prosecution asks you to convict on a grainy shadow. Let me tell you what they do not have: No fingerprints on the vehicle. No DNA evidence. No stolen property recovered from Webb's residence. No eyewitness who can identify his face. Their entire case rests on a 480p camera that captured a silhouette — and a bartender who confirms Webb was in the bar at the time. The standard is proof beyond a reasonable doubt. A silhouette is not proof. You must find Marcus Webb Not Guilty.",
-                "phase": "Opening",
-            },
-            # ════════════════ PHASE 4: EVIDENCE PRESENTATION ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to evidence presentation.", "phase": "Evidence"},
-            {
-                "agent": "Prosecutor",
-                "text": "The People submit Exhibit A: parking-lot camera footage, timestamped 11:47 PM, March 14th, showing a figure approaching the Tesla.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Defense",
-                "text": "Objection. FRE 403 — the footage is 480p and the figure's face is not identifiable. It is more prejudicial than probative. The jury cannot distinguish Webb from any random person.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Judge",
-                "text": "Overruled. The resolution is a matter of weight for the jury. The timestamp and physical characteristics are probative. FRE 401. Exhibit A admitted.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The People submit Exhibit B: vehicle owner statement confirming the Tesla was locked, armed, and parked at 9:00 PM. The owner returned at 12:30 AM to find the space empty.",
-                "phase": "Evidence",
-            },
-            {"agent": "Judge", "text": "Exhibit B admitted without objection.", "phase": "Evidence"},
-            {
-                "agent": "Defense",
-                "text": "The defense submits Exhibit C: bar credit card receipt showing Webb's tab was active at 11:42 PM — five minutes before the alleged theft.",
-                "phase": "Evidence",
-            },
-            {"agent": "Judge", "text": "Exhibit C admitted without objection.", "phase": "Evidence"},
-            # ════════════════ PHASE 5: WITNESS EXAMINATION ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to witness examination.", "phase": "Witness"},
-            # --- Officer Daniels ---
-            {
-                "agent": "Prosecutor",
-                "text": "The People call Officer Daniels. Officer — describe what you observed at the scene.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I arrived at 12:15 AM. The parking space was empty. I reviewed the footage on-site — a figure matching Webb's height and build was near the vehicle at 11:47 PM. The timestamp is continuous — no gaps in the recording.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "Officer, you cannot identify the face in the footage — correct?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Correct. The face is not clearly visible. But the build, height, and gait pattern are consistent with booking photos of the defendant.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "This parking lot serves a jazz bar on a Friday night. How many people approximately match Webb's height and build in a city of eight million?",
-                "phase": "Witness",
-            },
-            {"agent": "Witness", "text": "Many could. I cannot give a number.", "phase": "Witness"},
-            {
-                "agent": "Prosecutor",
-                "text": "One question on redirect, Officer. Does the footage show anyone ELSE near that Tesla at 11:47 PM?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "No. Only one figure approaches the vehicle at that time. No one else is visible in the frame.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Response consistent with footage review notes. No other individuals visible in timestamped frames.",
-                "phase": "Witness",
-            },
-            # --- Sarah Lin (alibi) ---
-            {
-                "agent": "Defense",
-                "text": "The defense calls Sarah Lin. Ms. Lin — you are a bartender at The Blue Note. Was Marcus Webb in the bar at 11:47 PM on March 14th?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Yes. I served him a whiskey sour around 11:30 PM. He settled his tab at 11:42 PM — I have the receipt. He was sitting at the bar talking with other regulars.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "Ms. Lin — it was a busy Friday night. You were serving dozens of customers. Could you have lost sight of him for ten or fifteen minutes?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "It was very busy, yes. The bar seats forty people. I can't watch everyone every second. But the receipt shows he was active on his tab at 11:42 PM.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The tab receipt shows a transaction time. It does not show his physical location. The parking lot is 90 seconds from the bar's entrance. He could have walked out, committed the theft, and returned unnoticed — correct?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "...I suppose it's physically possible, yes. The bar has a side exit.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Testimony consistent with deposition. Witness acknowledges gaps in observation.",
-                "phase": "Witness",
-            },
-            # ════════════════ PHASE 6: REBUTTAL EVIDENCE ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to rebuttal evidence.", "phase": "Rebuttal"},
-            {"agent": "Judge", "text": "Prosecution — rebuttal?", "phase": "Rebuttal"},
-            {
-                "agent": "Prosecutor",
-                "text": "Your Honor, the defense introduced a credit card receipt. But we note the receipt shows a tab closing — not a presence confirmation. A tab can be closed by anyone. And we submit — through Officer Daniels — that the 11:47 PM timestamp on the footage is independently verified by the camera's NTP server. The timeline is exact.",
-                "phase": "Rebuttal",
-            },
-            {"agent": "Judge", "text": "Defense — surrebuttal?", "phase": "Rebuttal"},
-            {
-                "agent": "Defense",
-                "text": "The receipt is a machine-generated timestamp from a POS system, independently verified by the bar's transaction log. It carries the same weight as any digital record. My client closed his own tab. The prosecution cannot prove otherwise.",
-                "phase": "Rebuttal",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Both exhibits are independently timestamped. Conflict is a matter for the jury.",
-                "phase": "Rebuttal",
-            },
-            # ════════════════ PHASE 7: CLOSING ARGUMENTS ════════════════
-            {"agent": "Bailiff", "text": "The court will now proceed to closing arguments.", "phase": "Closing"},
-            {
-                "agent": "Prosecutor",
-                "text": "Camera places a figure matching the defendant at the scene, at the exact time of the theft. No one else is visible. The alibi witness admits to gaps. The bar receipt proves a transaction — not a location. The evidence points to one conclusion.",
-                "phase": "Closing",
-            },
-            {
-                "agent": "Defense",
-                "text": "A shadow is not proof beyond a reasonable doubt. No fingerprints. No DNA. No property recovered. No eyewitness identification. The camera is 480p — it cannot identify a face. The bartender confirms Webb was in the bar. The receipt proves activity at 11:42 PM. Reasonable doubt exists at every turn. You must find Marcus Webb Not Guilty.",
-                "phase": "Closing",
-            },
-            # ════════════════ PHASE 8: JURY INSTRUCTIONS ════════════════
-            {
-                "agent": "Bailiff",
-                "text": "The court will now proceed to jury instructions.",
-                "phase": "Jury Instructions",
-            },
-            {
-                "agent": "Judge",
-                "text": "Members of the jury — the defendant is charged with Grand Theft Auto in the First Degree under New York Penal Law 155.42. To find the defendant guilty, you must find: (1) the defendant took a motor vehicle valued over $50,000, (2) belonging to another person, (3) with intent to permanently deprive the owner of it. The prosecution bears the burden of proof beyond a reasonable doubt. Circumstantial evidence may support a conviction only if it excludes every reasonable hypothesis of innocence. If you have a reasonable doubt, you must acquit.",
-                "phase": "Jury Instructions",
-            },
-            # ════════════════ PHASE 9: JURY DELIBERATION ════════════════
-            {
-                "agent": "Bailiff",
-                "text": "The court will now proceed to jury deliberation.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Foreperson",
-                "text": "Each juror, please state your initial position.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #1 (Analytical): Not Guilty. The footage cannot identify a face. No forensic evidence exists. The prosecution relies entirely on inference from proximity.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #2 (Empathetic): Not Guilty. The bartender was convincing. The receipt is hard physical proof of his presence in the bar.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #3 (Skeptical): Guilty. The bar was busy — she could have lost track. The camera puts someone his exact size at the vehicle. The timing is too precise.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #4 (Pragmatic): Not Guilty. Too many gaps. No physical evidence. The standard is beyond reasonable doubt, and I have doubt.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Foreperson",
-                "text": "Round 1: 3 Not Guilty, 1 Guilty. Juror #3 — please elaborate.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #3: Circumstantial is still evidence. The timing and the camera together make it unlikely it's a coincidence. But the judge said circumstantial must exclude every reasonable hypothesis — and 'someone else matching his build' is a reasonable hypothesis. I'll change my vote.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Foreperson",
-                "text": "Round 2: 4 Not Guilty, 0 Guilty. Unanimous verdict reached.",
-                "phase": "Jury Deliberation",
-            },
-            # ════════════════ PHASE 10: SHADOW JURY ════════════════
-            {"agent": "Bailiff", "text": "The shadow jury has convened for analysis.", "phase": "Shadow Jury"},
-            {
-                "agent": "Juror",
-                "text": "Shadow Juror 1: The footage is too low-resolution to identify anyone. No forensic links to Webb. The bartender's credit card receipt is independently verifiable. [Vote: Not Guilty]",
-                "phase": "Shadow Jury",
-            },
-            {
-                "agent": "Juror",
-                "text": "Shadow Juror 2: The defense successfully established that 'someone with similar build' is a reasonable alternative. The prosecution did not exclude that hypothesis. [Vote: Not Guilty]",
-                "phase": "Shadow Jury",
-            },
-            {
-                "agent": "Juror",
-                "text": "Shadow Juror 3: The alibi has gaps, but suspicion is not proof. The camera at 480p is effectively worthless for identification. Justice requires more. [Vote: Not Guilty]",
-                "phase": "Shadow Jury",
-            },
-            {
-                "agent": "Juror",
-                "text": "Shadow Juror 4: The prosecution's case is entirely circumstantial. No DNA, no fingerprints, no recovery of property. The standard of beyond reasonable doubt is not met. [Vote: Not Guilty]",
-                "phase": "Shadow Jury",
-            },
-            {
-                "agent": "Juror",
-                "text": "Shadow Juror 5: Timing is suspicious, but the bar receipt at 11:42 PM creates a very narrow window for the crime. Reasonable doubt exists. [Vote: Not Guilty]",
-                "phase": "Shadow Jury",
-            },
-            {"agent": "Bailiff", "text": "The shadow jury has completed its analysis.", "phase": "Shadow Jury"},
-            # ════════════════ PHASE 11: VERDICT (Not Guilty → no sentencing) ════════════════
-            {"agent": "Bailiff", "text": "All rise for the reading of the verdict.", "phase": "Verdict"},
-            {
-                "agent": "Judge",
-                "text": "On the charge of Grand Theft Auto in the First Degree, the defendant Marcus Webb is found NOT GUILTY. The defendant is free to go.",
-                "phase": "Verdict",
-            },
-            # ════════════════ PHASE 12: COURT REPORTER ════════════════
-            {
-                "agent": "Bailiff",
-                "text": "Case 24-CR-0081 — State of New York versus Marcus Webb — is concluded. The trial record shall be certified by the court reporter.",
-                "phase": "Court Reporter Log",
-            },
-            {
-                "agent": "System",
-                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CR-0081. Verdict: NOT GUILTY. Transcript includes 3 exhibits, 2 witnesses, 2 pre-trial motions, 1 objection ruling, 6-phase trial, 5 shadow juror analyses.]",
-                "phase": "Court Reporter Log",
-            },
-            # ════════════════ ADJOURNED ════════════════
-            {
-                "agent": "Bailiff",
-                "text": "All charges have been adjudicated. This court is adjourned.",
-                "phase": "Adjourned",
-            },
-        ],
-        "verdict": "NOT GUILTY",
-        "win_probability": 0.32,
-        "sensitivity": "If fingerprints had been found → Prosecution win probability rises to 78%",
-        "shadow_jury_narrative": [
-            {
-                "name": "Shadow Juror 1",
-                "content": "The footage is too grainy to identify the defendant with certainty. No forensic evidence links Webb to the vehicle. The bartender's testimony creates reasonable doubt. [Vote: Not Guilty]",
-            },
-            {
-                "name": "Shadow Juror 2",
-                "content": "While the figure matches Webb's build, that is not identification. No fingerprints, no DNA, no recovered property. The prosecution has not met its burden. [Vote: Not Guilty]",
-            },
-            {
-                "name": "Shadow Juror 3",
-                "content": "The alibi is weak — a busy bar with gaps in memory. But circumstantial evidence alone cannot convict beyond reasonable doubt. [Vote: Not Guilty]",
-            },
-            {
-                "name": "Shadow Juror 4",
-                "content": "Security footage at 480p is nearly useless for facial identification. Without physical evidence, this case is speculation. [Vote: Not Guilty]",
-            },
-            {
-                "name": "Shadow Juror 5",
-                "content": "The timing is suspicious, but suspicion is not proof. The defense raised sufficient doubt. [Vote: Not Guilty]",
-            },
-        ],
-    },
-    "contract": {
-        "title": "Nexus Corp. v. Aether Labs — NDA Breach",
-        "jurisdiction": "United States · Delaware",
-        "description": (
-            "Nexus Corp. alleges Aether Labs violated an NDA by sharing proprietary battery "
-            "schematics with PowerCell Inc. Aether Labs claims the shared information was "
-            "independently developed and not within scope of the agreement."
-        ),
-        "questions": [
-            "Does the NDA explicitly define 'proprietary battery technology'?",
-            "Did Aether Labs document independent research predating the NDA?",
-            "Was there a formal data-sharing agreement with PowerCell Inc.?",
-            "Did a Nexus engineer confirm the shared schematics match their IP?",
-            "What was the quantified financial impact to Nexus Corp.?",
+            "Could Volkov's SSH keys have been copied from his laptop without his knowledge?",
+            "Does the Berlin hotel WiFi logs show continuous device activity during the attack window?",
+            "Was Volkov's laptop encrypted or password-protected, and who else had physical access?",
+            "Can IP geolocation evidence definitively rule out a VPN relay from Berlin to a US server?",
+            "Were any other suspects identified with access to St. Jude's network infrastructure?",
         ],
         "trial_script": [
             # ════════════════ PHASE 1: DISCOVERY ════════════════
@@ -425,280 +66,404 @@ DEMO_CASES: dict[str, dict] = {
             },
             {
                 "agent": "Judge",
-                "text": "Be seated. Nexus Corporation versus Aether Laboratories — alleged breach of Non-Disclosure Agreement. Plaintiff's counsel — your disclosure.",
+                "text": "Be seated. State versus Dmitri Volkov — computer intrusion and attempted extortion. The court proceeds with discovery disclosure. Mr. Mercer.",
                 "phase": "Discovery",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The plaintiff discloses: (1) The signed NDA between Nexus Corp. and Aether Labs, dated January 15, 2023; (2) Email from Aether CTO to PowerCell attaching 'NX-Battery-Specs-v3.pdf'; (3) Dr. Helen Marsh's comparative materials analysis report showing 94% structural match; (4) Nexus NX-7 battery schematics shared with Aether under the NDA.",
+                "text": "The People disclose: (1) Laptop seized from Volkov, Dell XPS 15, containing SSH private keys matching the authorized_keys on the compromised hospital server; (2) FBI digital forensics report by Special Agent Chen; (3) IP address logs from St. Jude's showing the intrusion originating from a VPN endpoint; (4) Blockchain transaction records linking the ransom wallet to an exchange account registered to Volkov.",
                 "phase": "Discovery",
             },
             {
                 "agent": "Defense",
-                "text": "Aether Labs discloses: (1) Internal research logs predating the NDA showing independent cathode development; (2) Expert report by Dr. Raj Mehta, independent materials scientist, concluding cathode layering is standard industry practice; (3) Correspondence logs showing all public-domain information shared with PowerCell.",
+                "text": "The defense discloses: (1) Passport showing Volkov entered Germany on July 10th and departed July 14th; (2) Hotel InterContinental Berlin key card records dated July 11-13; (3) DevSecOps Berlin conference badge scan logs placing Volkov at the venue during the attack window; (4) Expert report by Dr. Amina Patel, cybersecurity researcher, documenting a known RAT vulnerability in Volkov's laptop model that allows credential harvesting.",
                 "phase": "Discovery",
             },
-            {
-                "agent": "Judge",
-                "text": "Disclosure is complete. The court notes competing expert reports. Proceed to pre-trial motions.",
-                "phase": "Discovery",
-            },
+            {"agent": "Judge", "text": "Disclosure is complete. The court notes competing narratives on digital forensics. Proceed to pre-trial motions.", "phase": "Discovery"},
             # ════════════════ PHASE 2: PRE-TRIAL MOTIONS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to pre-trial motions.", "phase": "Motions"},
             {
                 "agent": "Judge",
-                "text": "Defense counsel — your motion to exclude the email as insufficient proof.",
+                "text": "Defense counsel — your motion to suppress the IP address logs. State your grounds.",
                 "phase": "Motions",
             },
             {
                 "agent": "Defense",
-                "text": "Your Honor, the email's file name 'NX-Battery-Specs-v3.pdf' is not proof that the file contains Nexus IP. The plaintiff has not produced the actual attached file. A file name is hearsay and is insufficient to establish content under FRE 1002 — the Best Evidence Rule.",
+                "text": "Your Honor, St. Jude's IT department generated these logs internally. No third-party records custodian has authenticated them. Under FRE 803(6), the proponent must show the record was made at or near the time by someone with knowledge. The prosecution has not provided a witness from St. Jude's to lay that foundation.",
                 "phase": "Motions",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The email is a business record of Aether Labs' own communication. Aether's CTO sent it. Aether's email server generated it. The People are not offering the file name to prove the file's contents — we are offering it to prove Aether knowingly used Nexus's internal designation. That is not hearsay.",
+                "text": "The People will call St. Jude's IT Director during trial to authenticate the logs. The records were generated automatically by the hospital's network monitoring system in the regular course of business. FRE 803(6) is satisfied with foundation witness testimony at trial.",
                 "phase": "Motions",
             },
             {
                 "agent": "Judge",
-                "text": "Motion DENIED. The email is admitted as a party-opponent statement under FRE 801(d)(2) — it is Aether's own communication. The file name is not being offered for its truth but to show Aether's knowledge and frame of mind. The defense may argue weight.",
+                "text": "Motion DENIED without prejudice. The defense may renew after foundation is laid at trial. The logs are conditionally admissible subject to authentication. FRE 104(b).",
                 "phase": "Motions",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The plaintiff moves for summary judgment under FRCP 56. The NDA is clear, the email connects Aether to PowerCell, and Dr. Marsh's report shows 94% match. No genuine dispute of material fact.",
+                "text": "The People move to preclude the defense from introducing evidence of the Berlin conference under FRE 403. The conference attendance does not prove Volkov was not at a keyboard — he could have used a VPN from Berlin. The probative value is substantially outweighed by the likelihood of jury confusion.",
                 "phase": "Motions",
             },
             {
                 "agent": "Defense",
-                "text": "Aether opposes. Material facts are genuinely disputed: whether the NDA covers cathode layering as 'proprietary technology,' whether Aether independently developed that layering before the NDA, and whether the 94% match reflects coincidence in an iterative field. These are jury questions.",
+                "text": "Objection, Your Honor. The conference evidence is central to our alibi defense. Physical presence in Berlin directly contradicts the claim that he operated the laptop from within the United States. VPN evidence is speculative — the prosecution has no VPN logs linking him.",
                 "phase": "Motions",
             },
             {
                 "agent": "Judge",
-                "text": "Summary judgment DENIED. The scope of 'proprietary technology' under the NDA and the independence of Aether's development are disputed facts for the jury to resolve.",
+                "text": "Motion DENIED. The conference evidence is highly probative of the defense's theory. The prosecution may argue the VPN possibility to the jury — that goes to weight, not admissibility.",
                 "phase": "Motions",
             },
             # ════════════════ PHASE 3: OPENING STATEMENTS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to opening statements.", "phase": "Opening"},
-            {"agent": "Judge", "text": "Plaintiff's counsel — opening statement, please.", "phase": "Opening"},
+            {"agent": "Judge", "text": "Mr. Mercer — the People's opening statement.", "phase": "Opening"},
             {
                 "agent": "Prosecutor",
-                "text": "Ladies and gentlemen — Nexus Corp. entrusted Aether Laboratories with its most valuable intellectual property: a next-generation battery cathode design that took four years and eighteen million dollars to develop. They signed an NDA explicitly protecting 'all technical specifications shared during the partnership.' Within six months of receiving those specifications, Aether's CTO emailed a file named after Nexus's internal designation — 'NX-Battery-Specs-v3.pdf' — to PowerCell, a Nexus competitor. Dr. Helen Marsh, Nexus's lead materials engineer, will testify that PowerCell's subsequent product is a 94% structural match to the NX-7 design. The evidence proves Aether breached the NDA. We ask you to find Aether liable and award damages.",
+                "text": "Ladies and gentlemen — on July 12th, at 2:14 AM, a ransomware attack encrypted 14,000 patient records at St. Jude's Medical Center. The hospital's systems were locked. Surgeries were cancelled. The attackers demanded $4.2 million in Bitcoin. The FBI traced the attack to a laptop owned by Dmitri Volkov, found his SSH keys loaded on the hospital's server, and followed the Bitcoin payments to an exchange account registered in his name. The evidence will show that Dmitri Volkov launched this attack — and that his Berlin trip was a carefully planned alibi, not a defense. The evidence points to one conclusion: Guilty.",
                 "phase": "Opening",
             },
             {"agent": "Judge", "text": "Defense counsel.", "phase": "Opening"},
             {
                 "agent": "Defense",
-                "text": "The plaintiff cannot prove the email attachment contained anything proprietary because they never produced the file. A file name is not a blueprint. Cathode layering — the technique at the center of this case — has been published in open-access materials science journals since 2009. Aether's internal research logs predate the NDA by eighteen months. A 94% match across two products in an industry where every manufacturer optimizes the same few parameters is not theft — it is parallel evolution. The NDA does not cover generally known engineering principles, which is exactly what cathode layering is. You must find Aether Labs Not Liable.",
+                "text": "Members of the jury — the prosecution asks you to convict Dmitri Volkov because his name is on a laptop and his keys exist in a server. They cannot place his hands on a keyboard. They cannot produce a single witness who saw him commit this crime. Here is what they cannot explain: Dmitri was in Berlin. His passport proves it. His hotel proves it. His conference badge proves it. And months before this attack, a known remote access trojan was harvesting credentials from laptops exactly like his. Someone stole his keys. Someone used his laptop. But that someone was not Dmitri Volkov. The evidence raises reasonable doubt at every turn. You must find him Not Guilty.",
                 "phase": "Opening",
             },
             # ════════════════ PHASE 4: EVIDENCE PRESENTATION ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to evidence presentation.", "phase": "Evidence"},
             {
                 "agent": "Prosecutor",
-                "text": "Plaintiff submits Exhibit A: the signed Non-Disclosure Agreement between Nexus Corp. and Aether Labs, dated January 15, 2023. Clause 3.1: 'All technical specifications, schematics, test data, and manufacturing processes shared during the partnership are confidential and shall not be disclosed to any third party.'",
-                "phase": "Evidence",
-            },
-            {"agent": "Judge", "text": "Exhibit A admitted without objection.", "phase": "Evidence"},
-            {
-                "agent": "Prosecutor",
-                "text": "Plaintiff submits Exhibit B: email from Aether CTO Samir Patel to PowerCell CTO Gina Torres, dated July 8, 2023, attaching a file named 'NX-Battery-Specs-v3.pdf.' Subject line: 'Per our discussion.'",
+                "text": "The People submit Exhibit A: the Dell XPS 15 laptop seized from Dmitri Volkov's residence, containing SSH private keys in the home directory's .ssh folder.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "Objection. The file name alone does not prove the contents are Nexus IP. Under FRE 1002 — the Best Evidence Rule — the original file must be produced to prove its content. An email with a filename is insufficient.",
+                "text": "Objection — chain of custody, Your Honor. The laptop was seized three weeks after the attack. There is no evidence the laptop was in the same condition as at the time of the intrusion. The FBI could not have preserved the exact state of the SSH keys.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The email is offered as a party-opponent statement under FRE 801(d)(2), not to prove the file's contents. The file name is relevant to show Aether's knowledge of Nexus's internal designation system.",
+                "text": "The laptop was seized pursuant to a warrant, imaged on-site, and the hash chain is documented in Agent Chen's forensic report. The chain of custody is continuous and verifiable.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Judge",
-                "text": "Sustained in part. The email is admitted as a party-opponent statement. The filename may be considered for what it shows about Aether's awareness — not for the truth of the file's contents. FRE 1002 remains applicable to the attachment itself. The jury will be so instructed.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Defense",
-                "text": "The defense submits Exhibit C: Aether's internal research logs, dated April 2021 through January 2023, documenting independent cathode layering experiments at Aether's Fremont facility.",
+                "text": "Overruled. The chain of custody is adequately documented. Any gaps go to weight, not admissibility. Exhibit A admitted.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Objection. Foundation — the defense has not established that these logs were created contemporaneously with the experiments. No witness has authenticated them.",
+                "text": "The People submit Exhibit B: IP address logs from St. Jude's network monitoring system, showing the intrusion originated from a VPN endpoint at 2:14 AM on July 12th.",
+                "phase": "Evidence",
+            },
+            {"agent": "Judge", "text": "Exhibit B admitted subject to authentication.", "phase": "Evidence"},
+            {
+                "agent": "Prosecutor",
+                "text": "The People submit Exhibit C: blockchain transaction records linking the ransom Bitcoin wallet to a cryptocurrency exchange account registered to Dmitri Volkov at the email address d.volkov@pm.me.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "Dr. Mehta will authenticate these logs during his testimony. They are date-stamped in Aether's laboratory information management system.",
+                "text": "Objection — foundation. The prosecution has not established that the exchange account was actually controlled by Volkov at the time of the transaction. An email address alone does not prove control. Accounts can be compromised.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "The exchange provided KYC records — verified identification, utility bills, and a linked bank account — all matching the defendant. The account was created six months before the attack.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Judge",
-                "text": "Conditionally admitted pending Dr. Mehta's authentication. FRE 104(b). Exhibit C admitted subject to connection.",
+                "text": "Overruled. The KYC records provide sufficient foundation. The defense may cross-examine on the possibility of account compromise. Exhibit C admitted.",
                 "phase": "Evidence",
             },
+            {
+                "agent": "Defense",
+                "text": "The defense submits Exhibit D: passport entry and exit stamps showing Dmitri Volkov entered Germany on July 10th and departed July 14th, placing him in Berlin during the July 12th attack.",
+                "phase": "Evidence",
+            },
+            {"agent": "Judge", "text": "Exhibit D admitted without objection.", "phase": "Evidence"},
+            {
+                "agent": "Defense",
+                "text": "The defense submits Exhibit E: Hotel InterContinental Berlin key card logs showing Volkov's room access on the morning of July 12th at 8:47 AM local time — which is 2:47 AM Eastern, 33 minutes after the attack began.",
+                "phase": "Evidence",
+            },
+            {"agent": "Judge", "text": "Exhibit E admitted without objection.", "phase": "Evidence"},
             # ════════════════ PHASE 5: WITNESS EXAMINATION ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to witness examination.", "phase": "Witness"},
-            # --- Expert: Dr. Helen Marsh (Nexus materials engineer) ---
+            # --- FBI Digital Forensics Agent Chen ---
             {
                 "agent": "Prosecutor",
-                "text": "The plaintiff calls Dr. Helen Marsh, Lead Materials Engineer at Nexus Corp. Dr. Marsh — please state your qualifications for the court.",
+                "text": "The People call Special Agent Marcus Chen, FBI Digital Forensics Unit. Agent Chen — describe your qualifications.",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "I hold a Ph.D. in Materials Science from MIT. I have 14 years of experience in battery cathode engineering, hold 7 patents in lithium-ion cathode architecture, and have published 22 peer-reviewed papers on solid-state battery materials. I led the NX-7 cathode design team at Nexus.",
+                "text": "I hold a Master's degree in Cybersecurity from Carnegie Mellon. I have 12 years of experience in digital forensics, am a Certified Forensic Computer Examiner (CFCE), and have testified as an expert in 23 federal cases involving computer intrusion.",
                 "phase": "Witness",
             },
             {
                 "agent": "Judge",
-                "text": "Defense — would you like to voir dire the witness on her qualifications?",
+                "text": "Defense — voir dire?",
                 "phase": "Witness",
             },
             {
                 "agent": "Defense",
-                "text": "Dr. Marsh — your 7 patents are held by Nexus Corp., not by you personally. And your published papers focus on solid-state batteries, not the lithium-ion technology at issue here. Are you qualified specifically to assess cathode layering similarity in lithium-ion cells?",
+                "text": "Agent Chen — your 23 prior testimonies, how many were for the prosecution and how many for the defense?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "My doctoral thesis was on lithium-ion cathode deposition morphology. I have been working exclusively on lithium-ion cathodes for eight of my fourteen years at Nexus. Solid-state is a more recent interest — my core expertise is lithium-ion. My patents cover lithium-ion cathode architecture.",
+                "text": "All 23 were for the government. I am employed by the FBI. I do not provide expert services to criminal defendants.",
                 "phase": "Witness",
             },
-            {"agent": "Defense", "text": "No further questions on qualifications, Your Honor.", "phase": "Witness"},
+            {"agent": "Defense", "text": "No further on qualifications.", "phase": "Witness"},
             {
                 "agent": "Judge",
-                "text": "The court qualifies Dr. Marsh as an expert in battery cathode engineering under FRE 702. You may proceed.",
-                "phase": "Witness",
-            },
-            # --- Direct: Dr. Marsh ---
-            {
-                "agent": "Prosecutor",
-                "text": "Dr. Marsh — describe your analysis comparing PowerCell's product to the NX-7 schematics shared with Aether Labs.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I performed a cross-sectional analysis of PowerCell's PC-900 cathode using scanning electron microscopy and X-ray diffraction. The cathode layering pattern — specifically the thickness ratios between the lithium cobalt oxide layer, the manganese spinel interlayer, and the carbon coating — is a 94% structural match to our NX-7 design. The dopant sequence — nickel followed by aluminum at specific concentration gradients — is identical to our proprietary formulation.",
+                "text": "The court qualifies Special Agent Chen as an expert in digital forensics under FRE 702. You may proceed.",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Could these results be a coincidence? Could two teams independently develop the same structure?",
+                "text": "Agent Chen — describe what you found on Volkov's laptop.",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "The general concept of cathode layering is known. But the specific combination of three thickness ratios plus the exact dopant sequence creates a unique signature. The probability of two independent teams arriving at this exact combination — across four independent variables — is less than 0.001%.",
+                "text": "The laptop contained SSH private keys in the standard .ssh/id_rsa path. I matched the public key to an entry in St. Jude's authorized_keys file on the compromised server. The key was added six weeks before the attack. I also found cryptocurrency wallet software and logs showing connection attempts to the same exchange address used in the ransom demand.",
                 "phase": "Witness",
             },
-            # --- Cross: Dr. Marsh ---
-            {
-                "agent": "Defense",
-                "text": "Dr. Marsh — your 0.001% probability assumes each variable is independent. But in layered cathode design, these variables are interdependent — a change in one layer's thickness affects the optimal thickness of adjacent layers. Your independence assumption is wrong, isn't it?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "The variables do interact, yes. That makes independent coincidence less likely, not more — because the interaction constraints narrow the viable design space. The 94% match is even more significant when you account for inter-variable dependencies.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "But you have never examined Aether's internal research logs from their Fremont facility, correct? So you cannot rule out that Aether independently arrived at a similar optimization through parallel research?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I reviewed the logs that were disclosed. The 2021 logs describe a single-layer cathode — not the multi-layer architecture at issue. The NX-7's three-layer design was developed in mid-2022, after Aether's disclosed research ended.",
-                "phase": "Witness",
-            },
-            # --- Redirect: Dr. Marsh ---
             {
                 "agent": "Prosecutor",
-                "text": "One question on redirect, Dr. Marsh. Does any published, open-access literature describe the exact combination of three thickness ratios and the nickel-aluminum dopant sequence found in both NX-7 and PowerCell's PC-900?",
+                "text": "Could the keys have been added to the server by someone other than Volkov?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "No. I conducted a comprehensive literature review as part of this litigation. No journal article, patent, or conference proceeding describes this specific combination. It exists only in Nexus's internal records — and now in PowerCell's product.",
+                "text": "The SSH protocol authenticates by possession of the private key. If the key is on Volkov's laptop, it could only be used by someone with access to that laptop — or someone who copied the key file.",
                 "phase": "Witness",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Literature review documented in expert report. No prior art found.",
+                "text": "✓ Testimony consistent with forensic report. Key matching confirmed.",
                 "phase": "Witness",
             },
-            # --- Defense Witness: Dr. Raj Mehta ---
+            # --- Cross: Agent Chen ---
             {
                 "agent": "Defense",
-                "text": "The defense calls Dr. Raj Mehta, independent materials scientist. Dr. Mehta — in your opinion, is cathode layering a proprietary technology or an industry-standard technique?",
+                "text": "Agent Chen — you testified the key could be used by someone who copied the key file. Is there any forensic evidence — any log, any access record — showing that Volkov's specific laptop was used to authenticate to the server at 2:14 AM on July 12th?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "Cathode layering has been standard industry practice since at least 2009. The concept of stacking lithium cobalt oxide with manganese spinel interlayers is taught in graduate materials science programs. The specific thickness ratios will naturally converge when engineers optimize for the same performance targets — energy density, thermal stability, and cycle life.",
+                "text": "The SSH protocol does not log which client device presented the key. We know the key was used from an IP address routed through a VPN. We cannot identify the specific device.",
                 "phase": "Witness",
             },
+            {
+                "agent": "Defense",
+                "text": "So for all you know, the key could have been presented from a device in Berlin — or Singapore — or anywhere in the world with an internet connection?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Theoretically, yes. The key authenticates the user, not the device.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "And when you imaged this laptop three weeks after the attack — did you check whether it was infected with a remote access trojan?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I ran standard malware scans. No active RAT was detected at the time of imaging. I cannot rule out that one existed previously and was removed.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "No further questions.",
+                "phase": "Witness",
+            },
+            # --- Redirect: Agent Chen ---
             {
                 "agent": "Prosecutor",
-                "text": "Dr. Mehta — you have never worked at Nexus Corp. or Aether Labs. You were retained by Aether's law firm three months ago for this litigation at a fee of $750 per hour. Your entire knowledge of this case comes from documents Aether selected to show you — correct?",
+                "text": "Agent Chen — one question on redirect. The laptop's SSH keys. You said they could have been copied. But the authorized_keys file on St. Jude's server was modified at 2:14 AM on July 12th — the exact time of the attack. If Volkov's keys were harvested by a RAT months before, why would the attacker wait until July 12th to add them to the server?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "I was retained as a consultant, yes. My hourly rate is standard for an expert of my seniority. I reviewed the documents available to both parties through discovery.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "But you did not inspect the PowerCell PC-900 physical product yourself. Your opinion is based entirely on Aether's description of what was shared — correct?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Correct. I did not physically examine the PowerCell product. My analysis is based on the disclosed specifications.",
+                "text": "That is a question of timing I cannot answer. The keys were added at the same time the attack began. It is consistent with a planned operation.",
                 "phase": "Witness",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Witness acknowledges limited scope of analysis. ✓ Financial interest disclosed.",
+                "text": "✓ Timing observation is consistent with forensic timeline.",
+                "phase": "Witness",
+            },
+            # --- Hospital IT Director ---
+            {
+                "agent": "Prosecutor",
+                "text": "The People call David Okonkwo, IT Director at St. Jude's Medical Center. Mr. Okonkwo — describe the impact of the July 12th ransomware attack.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "At approximately 2:14 AM, our network monitoring system alerted on unusual encryption activity. By 2:18 AM, 14,000 patient records were encrypted. We had to cancel 23 scheduled surgeries, divert emergency patients to other hospitals, and shut down our entire network for 72 hours.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Did your system log the IP address that initiated the encryption?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes, our logs capture all inbound SSH connections. The encryption was initiated from an IP address traced to a VPN provider based in Panama. The VPN provider's logs — which we obtained through a mutual legal assistance request — show the connection originated from an IP range assigned to a Berlin-based ISP.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ MLAT response documented in evidence. Berlin ISP confirmed.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Mr. Okonkwo — the VPN provider's logs showed a Berlin ISP. Berlin is a city of 3.6 million people. That log does not identify my client. And a VPN can make traffic appear to originate from any city the provider chooses. Correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "That is correct. A VPN user can select their exit node. The Berlin ISP log places the connection in Berlin's general geographic area — it is not device-specific.",
+                "phase": "Witness",
+            },
+            # --- Defense Expert: Dr. Amina Patel ---
+            {
+                "agent": "Defense",
+                "text": "The defense calls Dr. Amina Patel, Associate Professor of Cybersecurity at Georgia Tech. Dr. Patel — please state your qualifications.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I hold a Ph.D. in Computer Science from MIT, specializing in network security and malware analysis. I have 15 years of research experience, have published 30 peer-reviewed papers on credential theft and remote access trojans, and have served as a court-appointed expert in three federal computer crime cases.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "Prosecution — voir dire?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Patel — you were retained by the defense for this case, correct? And your fee is $650 per hour?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes, I was retained by defense counsel. My rate is standard for an expert of my seniority in cybersecurity litigation.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "No further on qualifications.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "The court qualifies Dr. Patel as an expert in cybersecurity under FRE 702.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Patel — the Dell XPS 15 laptop model. Is there a known vulnerability that allows credential harvesting?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. The XPS 15 with the 2022 BIOS version had a documented vulnerability — CVE-2022-33180 — that allows an attacker with physical access to boot from a USB device and copy the entire contents of the SSD, including SSH keys, without knowing the user password. The vulnerability was unpatched on the seized laptop.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Could Volkov's keys have been copied without his knowledge?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. If someone had physical access to the laptop for approximately 90 seconds, they could boot from a USB key, mount the SSD, copy the .ssh directory, and reboot. The laptop would show no signs of tampering.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ CVE-2022-33180 confirmed in NVD database. Unpatched status verified.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Patel — your theory requires someone to have physical access to Volkov's laptop. The FBI found no evidence of a break-in, no unauthorized access logs, and no witness placing anyone near Volkov's belongings. Is there any actual evidence that this vulnerability was exploited?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The nature of this exploit is that it leaves no trace. The absence of evidence of exploitation is consistent with the exploit's design. I cannot prove it happened — but the defense does not have to. The prosecution must prove beyond reasonable doubt that it did NOT happen, and the vulnerability makes that impossible.",
+                "phase": "Witness",
+            },
+            # --- Alibi: Berlin Conference Coordinator ---
+            {
+                "agent": "Defense",
+                "text": "The defense calls Ms. Hannah Berger, Event Coordinator for DevSecOps Berlin. Ms. Berger — was Dmitri Volkov present at the conference on July 12th?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. Our badge scanning system recorded his entry at 8:15 AM local time. He attended the morning keynote, the container security workshop from 10:00 AM to 12:00 PM, and the networking lunch. The badge logs show continuous scans at session entrances throughout the day.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Ms. Berger — the attack occurred at 2:14 AM Eastern Time, which is 8:14 AM in Berlin. Your badge scan shows entry at 8:15 AM — one minute after the attack began. Could he have used a laptop at 8:14 AM while walking into the conference venue?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "He could have been on his phone or a laptop simultaneously, yes. The badge scan does not preclude that.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Badge logs verified by conference organizer. Timestamps consistent.",
                 "phase": "Witness",
             },
             # ════════════════ PHASE 6: REBUTTAL EVIDENCE ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to rebuttal evidence.", "phase": "Rebuttal"},
-            {"agent": "Judge", "text": "Plaintiff — rebuttal?", "phase": "Rebuttal"},
+            {"agent": "Judge", "text": "Prosecution — rebuttal?", "phase": "Rebuttal"},
             {
                 "agent": "Prosecutor",
-                "text": "Dr. Mehta testified that cathode layering is standard. But the defense has not produced a single example from the public domain matching the NX-7's specific three-layer architecture with its dopant sequence. If this technology is so standard — where is it? We submit that the defense's 'industry standard' argument fails because it cannot identify a single prior instance.",
+                "text": "The defense has suggested a RAT and a credential harvesting exploit. But we note: the laptop was seized THREE WEEKS after the attack. The defense's own expert admitted she found no evidence of a RAT. And the KYC records for the Bitcoin exchange show the account was verified with Volkov's driver's license — not a stolen credential. The defense offers speculation, not evidence.",
                 "phase": "Rebuttal",
             },
             {"agent": "Judge", "text": "Defense — surrebuttal?", "phase": "Rebuttal"},
             {
                 "agent": "Defense",
-                "text": "The plaintiff shifts the burden. We do not need to find an identical match in the public domain — we only need to show that the underlying technique is general knowledge. Cathode layering is general knowledge. The specific optimization path Nexus took toward the same goal is not protected by their NDA unless it explicitly covers specific thickness ratios — and their NDA does not.",
+                "text": "The prosecution shifts the burden. We do not need to prove the RAT existed — we only need to show it is possible. The CVE vulnerability proves credential theft is possible. The Berlin alibi proves my client was 4,000 miles away. The prosecution cannot exclude the reasonable hypothesis that someone else used his credentials from Berlin or elsewhere.",
                 "phase": "Rebuttal",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Parties disagree on interpretation. Underlying facts are not in dispute.",
+                "text": "✓ Both sides presented arguments on burden of proof. Matter for jury.",
                 "phase": "Rebuttal",
             },
             # ════════════════ PHASE 7: CLOSING ARGUMENTS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to closing arguments.", "phase": "Closing"},
             {
                 "agent": "Prosecutor",
-                "text": "Ladies and gentlemen — think about what you have heard. A signed NDA that explicitly protects all technical specifications. An email from Aether's CTO attaching a file named after Nexus's internal project code. Dr. Marsh's unimpeached testimony — 94% structural match, with a combination so unique it exists nowhere in the published literature. Dr. Mehta, the defense's expert, never examined the PowerCell product. He was paid $750 an hour to review documents Aether selected for him. The NDA is clear. The email is damning. The science is conclusive. Aether Labs took Nexus's proprietary cathode technology and handed it to a competitor. By a preponderance of the evidence — you must find Aether Labs Liable for breach of contract.",
+                "text": "Ladies and gentlemen — Dmitri Volkov's SSH keys were used to break into St. Jude's hospital. His laptop contained those keys. His Bitcoin account received the ransom. The timing of the attack — 2:14 AM, 8:14 AM Berlin time — placed him walking into a conference precisely when the attack launched. A convenient coincidence? Or a planned alibi? The VPN Berlin log says the attack came from Berlin. The hotel key card says he returned to his room at 8:47 AM. The defense's RAT theory is speculation — no evidence. The CVE exploit requires physical access, and there is no evidence anyone touched his laptop. The evidence is overwhelming. Find Dmitri Volkov Guilty.",
                 "phase": "Closing",
             },
             {
                 "agent": "Defense",
-                "text": "The plaintiff has built a castle on a filename. They cannot produce the file attached to that email. They cannot prove what was inside it. Dr. Marsh's 94% match — an impressive number — reflects an industry optimizing the same well-known parameters toward the same performance targets. Her probability calculation assumes independence between variables that she admitted are interdependent. And the NDA — read the text — protects 'technical specifications' shared between the parties. It does not protect generally known engineering techniques, which is exactly what cathode layering has been for fifteen years. A file name. A statistical calculation with a flawed assumption. A standard NDA that covers specifications, not science. The plaintiff has not proven breach by a preponderance of the evidence.",
+                "text": "The prosecution asks you to fill gaps with suspicion. A laptop with keys — yes. But whose hands used those keys? The prosecution cannot answer that. An exchange account in his name — yes. But exchange accounts are compromised every day, and the prosecution brought no evidence that he initiated the transaction. A Berlin VPN log — the same VPN that could route from anywhere. The standard is beyond reasonable doubt. Not 'probably.' Not 'likely.' Beyond reasonable doubt. The prosecution has not excluded the possibility that Dmitri's keys were stolen, his account was compromised, and someone else — from anywhere in the world — committed this crime. Reasonable doubt exists. You must find Dmitri Volkov Not Guilty.",
                 "phase": "Closing",
             },
             # ════════════════ PHASE 8: JURY INSTRUCTIONS ════════════════
@@ -709,7 +474,7 @@ DEMO_CASES: dict[str, dict] = {
             },
             {
                 "agent": "Judge",
-                "text": "Members of the jury — this is a civil case for breach of contract. The plaintiff, Nexus Corporation, must prove its case by a preponderance of the evidence — meaning it is more likely than not that Aether Labs breached the NDA. To find Aether liable, you must find: (1) a valid NDA existed between the parties; (2) Aether disclosed protected information to a third party; (3) the disclosed information fell within the scope of the NDA's confidentiality clause; and (4) Nexus suffered damages as a result. Your verdict must be unanimous.",
+                "text": "Members of the jury — Count One charges the defendant with Computer Intrusion under 18 U.S.C. § 1030(a)(2)(C). To find the defendant guilty, the prosecution must prove beyond a reasonable doubt: (1) the defendant intentionally accessed a protected computer without authorization; (2) the access obtained information from the computer; and (3) the conduct caused damage. Count Two charges Attempted Extortion under 18 U.S.C. § 1951. To find the defendant guilty, the prosecution must prove beyond a reasonable doubt that the defendant demanded property with intent to use fear of economic harm to induce compliance. Circumstantial evidence alone may be sufficient for conviction only if it excludes every reasonable hypothesis of innocence. The defendant is presumed innocent. If you have a reasonable doubt, you must acquit.",
                 "phase": "Jury Instructions",
             },
             # ════════════════ PHASE 9: JURY DELIBERATION ════════════════
@@ -718,35 +483,587 @@ DEMO_CASES: dict[str, dict] = {
                 "text": "The court will now proceed to jury deliberation.",
                 "phase": "Jury Deliberation",
             },
-            {"agent": "Foreperson", "text": "Initial positions, please.", "phase": "Jury Deliberation"},
             {
-                "agent": "Juror",
-                "text": "Juror #1 (Analytical): Liable. 94% match plus the email with Nexus's internal file name. Dr. Marsh was credible and thorough. The defense expert never examined the actual product.",
+                "agent": "Foreperson",
+                "text": "Let us begin. Please state your initial positions.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #2 (Skeptical): Liable. The file was literally named 'NX-Battery-Specs.' If Aether independently developed this, why use Nexus's naming convention? That shows knowledge of origin.",
+                "text": "Juror #1 (Analytical): Not Guilty. The SSH key proves the key was used — not that Volkov used it. The prosecution did not exclude remote theft. The CVE vulnerability is a documented fact.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #3 (Empathetic): Liable. An NDA is an NDA. You sign it, you honor it. The email proves they shared something related to Nexus's specs.",
+                "text": "Juror #2 (Skeptical): Guilty. The Bitcoin exchange KYC is strong evidence. It's not just the key — it's the money trail. The account was verified with his ID and bank account. That is hard to explain away.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #4 (Pragmatic): Not Liable. The NDA wording is genuinely vague. 'Technical specifications' could mean anything. The defense raised enough doubt for me — this isn't criminal beyond reasonable doubt, but I'm not at 51% for the plaintiff.",
+                "text": "Juror #3 (Empathetic): Not Guilty. The Berlin alibi is convincing. Passport stamps, hotel key cards, conference badge scans. Being 4,000 miles away at the time of the crime is a powerful fact.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #4 (Pragmatic): Undecided. The digital evidence is strong but the alibi is also strong. I need to think about the timing more carefully.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Foreperson",
-                "text": "Round 1: 3 Liable, 1 Not Liable. Juror #4 — what would change your mind?",
+                "text": "Round 1: 2 Not Guilty, 1 Guilty, 1 Undecided. Let's discuss the exchange account. Juror #2 — can the money trail alone overcome the alibi?",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #4: Actually — thinking about Dr. Marsh's testimony again. She said this specific combination exists nowhere in the published literature. That's a fact the defense didn't rebut. If Nexus alone had this unique combination, and now PowerCell has it, and Aether is the only link... I'm moving to Liable.",
+                "text": "Juror #2: The KYC process requires photo ID. The attacker would need Volkov's physical driver's license to open that account. That's hard to fake. But... the account was opened six months before the attack. It could have been taken over by someone else later.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #4: I keep coming back to the standard. Beyond reasonable doubt. The defense showed a real vulnerability. A real alibi. A real alternative explanation. I'm Not Guilty.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Foreperson",
+                "text": "Round 2: 3 Not Guilty, 1 Guilty. Juror #2 — further thoughts?",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #2: The hospital suffered real damage. But the judge said circumstantial must exclude every reasonable hypothesis. The CVE exploit is a reasonable hypothesis. I change my vote to Not Guilty.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Foreperson",
+                "text": "Round 3: 4 Not Guilty, 0 Guilty. Unanimous verdict reached.",
+                "phase": "Jury Deliberation",
+            },
+            # ════════════════ PHASE 10: SHADOW JURY ════════════════
+            {"agent": "Bailiff", "text": "The shadow jury has convened for analysis.", "phase": "Shadow Jury"},
+            {
+                "agent": "Juror",
+                "text": "Shadow Juror 1: The Berlin alibi is strong physical evidence. Passport stamps and hotel records are not easily faked. The prosecution's VPN theory is speculative. [Vote: Not Guilty]",
+                "phase": "Shadow Jury",
+            },
+            {
+                "agent": "Juror",
+                "text": "Shadow Juror 2: Digital credentials can be stolen without the owner's knowledge. The CVE vulnerability is documented and the laptop was not patched. The prosecution did not exclude this. [Vote: Not Guilty]",
+                "phase": "Shadow Jury",
+            },
+            {
+                "agent": "Juror",
+                "text": "Shadow Juror 3: The Bitcoin trail is concerning. KYC verification with real ID is significant. But the alibi and the credential theft possibility create reasonable doubt. [Vote: Not Guilty]",
+                "phase": "Shadow Jury",
+            },
+            {
+                "agent": "Juror",
+                "text": "Shadow Juror 4: Without a witness placing Volkov at the keyboard, this is entirely circumstantial. The standard is beyond reasonable doubt — not met here. [Vote: Not Guilty]",
+                "phase": "Shadow Jury",
+            },
+            {
+                "agent": "Juror",
+                "text": "Shadow Juror 5: The timing is suspicious — attack at 2:14 AM, hotel key at 2:47 AM local. But suspicion is not proof. The defense raised sufficient doubt. [Vote: Not Guilty]",
+                "phase": "Shadow Jury",
+            },
+            {"agent": "Bailiff", "text": "The shadow jury has completed its analysis.", "phase": "Shadow Jury"},
+            # ════════════════ PHASE 11: VERDICT ════════════════
+            {"agent": "Bailiff", "text": "All rise for the reading of the verdict.", "phase": "Verdict"},
+            {
+                "agent": "Judge",
+                "text": "On Count One — Computer Intrusion — the defendant Dmitri Volkov is found NOT GUILTY. On Count Two — Attempted Extortion — the defendant Dmitri Volkov is found NOT GUILTY. The defendant is free to go.",
+                "phase": "Verdict",
+            },
+            # ════════════════ PHASE 12: COURT REPORTER ════════════════
+            {
+                "agent": "Bailiff",
+                "text": "Case 24-CR-0194 — State of New York versus Dmitri Volkov — is concluded. The trial record shall be certified by the court reporter.",
+                "phase": "Court Reporter Log",
+            },
+            {
+                "agent": "System",
+                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CR-0194. Verdict: NOT GUILTY on all counts. Transcript includes 5 exhibits, 4 witnesses including 1 expert qualification, 2 pre-trial motions, 6 objections with rulings, 6-phase trial, 5 shadow juror analyses.]",
+                "phase": "Court Reporter Log",
+            },
+            # ════════════════ ADJOURNED ════════════════
+            {
+                "agent": "Bailiff",
+                "text": "All charges have been adjudicated. This court is adjourned.",
+                "phase": "Adjourned",
+            },
+        ],
+        "verdict": "NOT GUILTY",
+        "win_probability": 0.31,
+        "sensitivity": "If Volkov's laptop had full-disk encryption enabled → Prosecution win probability rises to 74%",
+        "shadow_jury_narrative": [
+            {
+                "name": "Shadow Juror 1",
+                "content": "The Berlin alibi is strong physical evidence. Passport stamps and hotel records are not easily faked. The prosecution's VPN theory is speculative. [Vote: Not Guilty]",
+            },
+            {
+                "name": "Shadow Juror 2",
+                "content": "Digital credentials can be stolen without the owner's knowledge. The CVE vulnerability is documented and the laptop was not patched. The prosecution did not exclude this. [Vote: Not Guilty]",
+            },
+            {
+                "name": "Shadow Juror 3",
+                "content": "The Bitcoin trail is concerning. KYC verification with real ID is significant. But the alibi and the credential theft possibility create reasonable doubt. [Vote: Not Guilty]",
+            },
+            {
+                "name": "Shadow Juror 4",
+                "content": "Without a witness placing Volkov at the keyboard, this is entirely circumstantial. The standard is beyond reasonable doubt — not met here. [Vote: Not Guilty]",
+            },
+            {
+                "name": "Shadow Juror 5",
+                "content": "The timing is suspicious — attack at 2:14 AM, hotel key at 2:47 AM local. But suspicion is not proof. The defense raised sufficient doubt. [Vote: Not Guilty]",
+            },
+        ],
+    },
+    "spill": {
+        "title": "Coastal Protection Agency v. Meridian Oil — Toxic Spill Cover-Up",
+        "jurisdiction": "United States · Federal District Court, Eastern District",
+        "description": (
+            "The Coastal Protection Agency alleges Meridian Oil is liable for an 80,000-gallon "
+            "crude oil spill that devastated the Point Reyes Marine Sanctuary on March 3rd. "
+            "A whistleblower — former Meridian engineer James Okafor — provided internal emails "
+            "showing that Meridian's inspection team discovered severe pipe corrosion six weeks "
+            "before the spill but senior management deferred the $2 million repair to meet "
+            "quarterly earnings targets. Satellite imagery from NOAA confirms the spill trajectory "
+            "originating from Meridian's offshore Platform Charlie. Meridian claims the pipe failure "
+            "was unforeseeable, that its maintenance schedule met all federal regulatory standards, "
+            "and that the whistleblower is a disgruntled former employee seeking retaliation."
+        ),
+        "questions": [
+            "When was the pipe corrosion first documented in Meridian's internal inspection reports?",
+            "Did Meridian receive a specific written recommendation to shut down Pipeline 7-A?",
+            "Can satellite imagery definitively attribute the spill to Meridian's Platform Charlie?",
+            "What was the quantified economic damage to local fishing and tourism industries?",
+            "Did Meridian's maintenance schedule comply with federal Pipeline Safety Act standards?",
+        ],
+        "trial_script": [
+            # ════════════════ PHASE 1: DISCOVERY ════════════════
+            {
+                "agent": "Bailiff",
+                "text": "All rise. The Honorable Justice Cross presiding. The court is now in session for the Discovery Disclosure phase.",
+                "phase": "Discovery",
+            },
+            {
+                "agent": "Judge",
+                "text": "Be seated. Coastal Protection Agency versus Meridian Oil Corporation — civil action for environmental damages under the Clean Water Act. Plaintiff's counsel, your disclosure.",
+                "phase": "Discovery",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "The plaintiff discloses: (1) Internal Meridian emails from February 3rd documenting severe corrosion on Pipeline 7-A, with recommendation to shut down; (2) NOAA satellite imagery time series from March 3rd showing the spill trajectory from Platform Charlie; (3) Expert report by Dr. Elena Vasquez, marine toxicologist, quantifying ecological damage; (4) Whistleblower deposition of James Okafor, former Meridian senior pipeline engineer.",
+                "phase": "Discovery",
+            },
+            {
+                "agent": "Defense",
+                "text": "Meridian Oil discloses: (1) Inspection reports confirming all regulatory maintenance schedules were met; (2) Expert report by Dr. Robert Kim, mechanical engineer, concluding the pipe corrosion was not detectable by standard inspection methods; (3) James Okafor's termination letter for violation of non-disclosure agreement; (4) Third-party audit showing Pipeline 7-A met all Pipeline Safety Act requirements.",
+                "phase": "Discovery",
+            },
+            {
+                "agent": "Judge",
+                "text": "Disclosure is complete. The court notes the central dispute: whether the pipe failure was foreseeable. Proceed to pre-trial motions.",
+                "phase": "Discovery",
+            },
+            # ════════════════ PHASE 2: PRE-TRIAL MOTIONS ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to pre-trial motions.", "phase": "Motions"},
+            {
+                "agent": "Judge",
+                "text": "Defense counsel — your motion to exclude the whistleblower emails. State your grounds.",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Defense",
+                "text": "Your Honor, James Okafor was terminated for violating his NDA. The emails he provided were obtained in violation of his contractual obligations. Under Federal common law, evidence obtained in breach of a confidentiality agreement should be excluded to avoid incentivizing contractual breaches.",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "The emails are not privileged. Okafor had a reasonable belief of ongoing illegality — the emails show decisions that would lead to environmental harm. This falls within the whistleblower exception to confidentiality obligations. Additionally, the emails are Meridian's own business records — they are admissible as party-opponent statements under FRE 801(d)(2).",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Judge",
+                "text": "Motion DENIED. The emails are Meridian's own communications — they are party-opponent statements under FRE 801(d)(2)(A). Okafor's NDA is a separate contractual matter between him and Meridian, not a ground for evidentiary exclusion. The emails are admissible.",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "The plaintiff moves for partial summary judgment on the issue of liability. The internal emails show Meridian had actual knowledge of the corrosion and chose not to act. No reasonable jury could find the spill unforeseeable.",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Defense",
+                "text": "Meridian opposes. There is a genuine dispute of material fact: whether the corrosion was severe enough to require immediate shutdown. Meridian's engineering team believed the pipe could safely operate until the scheduled maintenance window. That is a jury question.",
+                "phase": "Motions",
+            },
+            {
+                "agent": "Judge",
+                "text": "Summary judgment DENIED. The severity of the corrosion and the reasonableness of Meridian's decision are disputed facts for the jury. Proceed to trial.",
+                "phase": "Motions",
+            },
+            # ════════════════ PHASE 3: OPENING STATEMENTS ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to opening statements.", "phase": "Opening"},
+            {"agent": "Judge", "text": "Plaintiff's counsel — opening statement, please.", "phase": "Opening"},
+            {
+                "agent": "Prosecutor",
+                "text": "Ladies and gentlemen — on March 3rd, eighty thousand gallons of crude oil spilled into the Point Reyes Marine Sanctuary — one of America's most protected waters. The oil killed seabirds, contaminated oyster beds, and closed 200 square miles of ocean to fishing. But here is what makes this case different: Meridian Oil knew this would happen. Six weeks before the spill, their own inspection team found severe corrosion on Pipeline 7-A. Their own engineers recommended shutting it down. And their own executives said no — because fixing it would cost $2 million and hurt their quarterly earnings. The internal emails prove it. The satellite imagery proves the spill came from their platform. The damage is documented. By a preponderance of the evidence, Meridian Oil is liable.",
+                "phase": "Opening",
+            },
+            {
+                "agent": "Judge",
+                "text": "Defense counsel.",
+                "phase": "Opening",
+            },
+            {
+                "agent": "Defense",
+                "text": "Members of the jury — the plaintiff wants you to believe that one email is proof of negligence. But Meridian Oil operates 47 offshore platforms, 2,000 miles of pipeline, and conducts over 15,000 inspections a year. Every pipeline has some degree of corrosion — it is a natural consequence of transporting hydrocarbons. The question is not whether corrosion existed. The question is whether the corrosion was severe enough to present an imminent risk. Meridian's engineers — experts with decades of experience — determined it was not. The pipe was scheduled for replacement in the normal maintenance cycle. What happened was a tragic but unforeseeable failure. Liability requires foreseeability. Meridian is not liable.",
+                "phase": "Opening",
+            },
+            # ════════════════ PHASE 4: EVIDENCE PRESENTATION ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to evidence presentation.", "phase": "Evidence"},
+            {
+                "agent": "Prosecutor",
+                "text": "Plaintiff submits Exhibit A: internal Meridian emails dated February 3rd, from lead inspector Dan Torres to VP of Operations Karen Sims, stating 'Pipeline 7-A corrosion is at 78% wall loss — recommend immediate shutdown and replacement.'",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Defense",
+                "text": "Objection, Your Honor. Authentication — the plaintiff has not established that these emails are authentic business records. No Meridian custodian has verified them.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "James Okafor will authenticate the emails during his testimony. He was copied on the email chain and was present at the meeting where the recommendation was discussed.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Judge",
+                "text": "Conditionally admitted subject to Okafor's authentication. FRE 104(b). Exhibit A admitted subject to connection.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Plaintiff submits Exhibit B: NOAA satellite imagery from March 3rd, 8:00 PM UTC, showing the oil slick originating from Platform Charlie and spreading northeast toward the sanctuary at 2.5 knots.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Defense",
+                "text": "Objection — foundation. The NOAA analyst who processed these images is not here to testify. The images are hearsay within a public record.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Satellite imagery is not hearsay — it is a photograph, a thing not a statement. And NOAA's public records are self-authenticating under FRE 902(11). There is no hearsay issue.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Judge",
+                "text": "Overruled. Satellite imagery is demonstrative evidence, not hearsay. The NOAA certification is sufficient for self-authentication under FRE 902. Exhibit B admitted.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Defense",
+                "text": "The defense submits Exhibit C: Meridian's third-party pipeline safety audit, dated January 15th, concluding Pipeline 7-A met all federal Pipeline Safety Act requirements and had an estimated remaining safe life of 14 months.",
+                "phase": "Evidence",
+            },
+            {"agent": "Judge", "text": "Exhibit C admitted without objection.", "phase": "Evidence"},
+            # ════════════════ PHASE 5: WITNESS EXAMINATION ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to witness examination.", "phase": "Witness"},
+            # --- Whistleblower: James Okafor ---
+            {
+                "agent": "Prosecutor",
+                "text": "The plaintiff calls James Okafor. Mr. Okafor — you were a senior pipeline engineer at Meridian Oil until February 28th. Describe your role.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I was responsible for inspecting Meridian's offshore pipeline infrastructure. I supervised a team of four inspectors covering 22 pipelines across the Gulf region.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Tell the jury about the February 3rd meeting regarding Pipeline 7-A.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I presented the inspection findings to VP Karen Sims. The ultrasonic testing showed 78% wall loss on a 20-inch diameter pipe. Industry standard recommends shutdown at 70% wall loss. I recommended immediate shutdown. Ms. Sims said the cost of shutting down Platform Charlie for two weeks — approximately $2 million in lost production — was unacceptable. She wanted to defer until the Q3 maintenance cycle.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Did you express concern about this decision in writing?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. I sent an email to Ms. Sims later that day — Exhibit A — reiterating that operating at 78% wall loss was unsafe and that I could not recommend continued operation. I copied my personal email as a record.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Email chain verified. 78% wall loss confirmed in inspection report.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Mr. Okafor — you were fired from Meridian Oil on February 28th, correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. They terminated me for violating the NDA by forwarding company emails to my personal account.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "And you are currently suing Meridian for wrongful termination, seeking $2.3 million in damages?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. I have a pending lawsuit. But that does not change the facts of what I found and what I reported.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "You stand to gain financially from a verdict against Meridian, correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "My wrongful termination case is separate from this litigation. I am not a party to this lawsuit.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Witness has disclosed financial interest in related litigation. Credibility matter for jury.",
+                "phase": "Witness",
+            },
+            # --- Expert: Dr. Elena Vasquez (marine toxicologist) ---
+            {
+                "agent": "Prosecutor",
+                "text": "The plaintiff calls Dr. Elena Vasquez, Professor of Marine Toxicology at UC Santa Barbara. Dr. Vasquez — your qualifications?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I hold a Ph.D. in Marine Biology from Stanford. I have 18 years of research experience in marine oil spill impact assessment, have authored 45 peer-reviewed publications, and have served as a scientific advisor on four major oil spill response efforts including Deepwater Horizon and Refugio.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "Defense — voir dire?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Vasquez — your research is primarily funded through federal grants. You have never worked for an oil company. Is it fair to say your career has focused on demonstrating the negative environmental impacts of oil extraction?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "My career has focused on understanding the environmental impacts of marine pollution, including oil spills. I apply the scientific method regardless of who funds the research.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "No further on qualifications.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "The court qualifies Dr. Vasquez as an expert in marine toxicology under FRE 702. You may proceed.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Vasquez — describe the ecological impact of the March 3rd spill.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The 80,000-gallon crude oil release affected approximately 200 square miles of marine habitat. My analysis documents: 2,400 seabird deaths, contamination of 18 commercial oyster beds, a 60% reduction in plankton productivity in the affected zone, and long-term toxicity in sediment samples that will persist for 7 to 12 years. The economic damage to local fisheries is estimated at $4.7 million in lost revenue over the first year alone.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Could this damage have been prevented?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "If the pipeline had been shut down when the corrosion was discovered, the spill would not have occurred. The damage is entirely attributable to the failure to act on known information.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Economic data sourced from NOAA fisheries survey. Sediment analysis methodology peer-reviewed.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Vasquez — your $4.7 million figure assumes the fishery would have operated at full capacity for the entire year. But the spill occurred during spawning season when many fisheries are voluntarily restricted. Your baseline is overstated, correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I applied NOAA's standard fisheries economic impact model. The $4.7 million accounts for seasonal variation. The loss is real and documented.",
+                "phase": "Witness",
+            },
+            # --- Defense Expert: Dr. Robert Kim ---
+            {
+                "agent": "Defense",
+                "text": "The defense calls Dr. Robert Kim, Professor of Mechanical Engineering at Texas A&M. Dr. Kim — your qualifications?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I hold a Ph.D. in Mechanical Engineering from MIT. I have 25 years of experience in pipeline integrity and corrosion engineering. I have consulted for the Pipeline Safety Trust, the American Petroleum Institute, and have served as an expert in 12 pipeline failure cases.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "Prosecution — voir dire?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Kim — you have consulted for the American Petroleum Institute, which is the primary lobbying organization for the oil and gas industry. Is that correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "API develops industry standards for pipeline safety. My work for API involved helping develop those standards — not lobbying.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "No further on qualifications.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Judge",
+                "text": "The court qualifies Dr. Kim as an expert in pipeline engineering under FRE 702.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Kim — in your opinion, was Meridian's decision to defer the Pipeline 7-A repair reasonable?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. Industry standard for wall loss shutdown is 80% — Meridian's own audit found 78%, which is within the acceptable operating range. The third-party safety audit confirmed a remaining safe life of 14 months. The decision to defer to Q3, a six-month delay, was well within the margin of safety.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Kim — Okafor testified that Meridian's internal standard was 70% wall loss for shutdown. Are you saying the internal standard was wrong?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I am saying the internal standard was more conservative than industry practice. Operating at 78% with 14 months of remaining safe life was not a safety violation. Hindsight is 20/20 — after a catastrophic failure, any corrosion level looks dangerous. The question is whether Meridian's decision was reasonable based on what they knew at the time.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "But you admit the pipe DID fail. The three-month deferral was not six months — it was three weeks before the scheduled shutdown. The corrosion was clearly worse than your 'remaining safe life' estimate. Your model was wrong, was it not?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The failure was a rare event. Corrosion models predict statistical probability — they do not guarantee outcomes. A pipe rated for 14 months of safe life can fail at any time due to localized anomalies that standard ultrasonic testing cannot detect. That does not mean the decision to defer was unreasonable.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Both experts disagree on industry standard threshold. Jury may weigh competing testimony.",
+                "phase": "Witness",
+            },
+            # ════════════════ PHASE 6: REBUTTAL EVIDENCE ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to rebuttal evidence.", "phase": "Rebuttal"},
+            {"agent": "Judge", "text": "Plaintiff — rebuttal?", "phase": "Rebuttal"},
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Kim says 78% was acceptable. But Meridian's OWN engineers recommended shutdown at 70%. The defense asks you to believe an industry standard that starts at 80% — conveniently above Meridian's actual reading. And Dr. Kim's '14-month safe life' — where did that come from? The third-party audit was paid for by Meridian, conducted by a firm Meridian hires annually. Their estimate was wrong. The pipe failed in 3 weeks. The defense's expert was wrong.",
+                "phase": "Rebuttal",
+            },
+            {"agent": "Judge", "text": "Defense — surrebuttal?", "phase": "Rebuttal"},
+            {
+                "agent": "Defense",
+                "text": "The plaintiff asks you to infer negligence from a pipe failure. But negligence requires foreseeability, not hindsight. Every pipeline engineer in the country will tell you that pipes fail — even well-maintained ones. Corrosion is measured in probabilities, not certainties. Meridian followed industry standards, passed third-party audits, and made a reasonable engineering judgment. The fact that a rare failure occurred is not evidence of negligence.",
+                "phase": "Rebuttal",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Both expert opinions noted. Core dispute: reasonableness of maintenance decision.",
+                "phase": "Rebuttal",
+            },
+            # ════════════════ PHASE 7: CLOSING ARGUMENTS ════════════════
+            {"agent": "Bailiff", "text": "The court will now proceed to closing arguments.", "phase": "Closing"},
+            {
+                "agent": "Prosecutor",
+                "text": "Ladies and gentlemen — this case is about a choice. Meridian Oil knew about the corrosion. Their own engineers told them to shut it down. And they chose profit over safety. $2 million to fix the pipe. $4.7 million in damages after the spill. An email trail that documents every decision. The defense will tell you about industry standards — but their own standard was higher. The defense will tell you about reasonable engineering judgment — but their engineers recommended shutdown. The standard is preponderance of the evidence — more likely than not. Is it more likely than not that Meridian's decision to defer caused this spill? The emails say yes. The science says yes. The damage says yes. Find Meridian Oil Liable.",
+                "phase": "Closing",
+            },
+            {
+                "agent": "Defense",
+                "text": "The plaintiff wants you to punish Meridian because a pipe failed. But Meridian did everything right. They inspected regularly. They followed industry standards. They hired independent auditors. A pipe failed — tragically — but that is not the same as negligence. The plaintiff's case rests on one employee — James Okafor — who was fired for stealing company emails and is now suing Meridian for millions. His reliability is the foundation of their case. Dr. Kim explained that 78% wall loss is within industry norms. The third-party audit confirmed safety. Hindsight is not a legal basis for liability. By a preponderance of the evidence, Meridian acted reasonably. Find Meridian Oil Not Liable.",
+                "phase": "Closing",
+            },
+            # ════════════════ PHASE 8: JURY INSTRUCTIONS ════════════════
+            {
+                "agent": "Bailiff",
+                "text": "The court will now proceed to jury instructions.",
+                "phase": "Jury Instructions",
+            },
+            {
+                "agent": "Judge",
+                "text": "Members of the jury — this is a civil action under the Clean Water Act. The plaintiff, Coastal Protection Agency, must prove its case by a preponderance of the evidence — meaning it is more likely than not that Meridian Oil is liable. To find Meridian liable, you must find: (1) Meridian owned or operated the pipeline that released oil; (2) the release caused damage to natural resources; and (3) Meridian failed to exercise reasonable care in maintaining the pipeline. Negligence is the failure to use ordinary care — that is, the care that a reasonably prudent pipeline operator would use under similar circumstances. The plaintiff does not need to prove that Meridian intended the harm — only that their failure to act reasonably caused the spill. Your verdict must be unanimous.",
+                "phase": "Jury Instructions",
+            },
+            # ════════════════ PHASE 9: JURY DELIBERATION ════════════════
+            {
+                "agent": "Bailiff",
+                "text": "The court will now proceed to jury deliberation.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Foreperson",
+                "text": "Initial positions, please.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #1 (Analytical): Liable. The emails are damning. The company's own engineers said shut it down. Management chose money over safety. That is negligence.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #2 (Skeptical): Not Liable. Okafor has a financial motive. He is suing them. The independent audit said the pipe was safe. Dr. Kim was convincing that 78% is within norms.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #3 (Empathetic): Liable. Whether or not Okafor is biased, the emails exist. They show management knew and chose to defer. If they had acted, the spill does not happen.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #4 (Pragmatic): Liable. The economic damage is real. The question is whether Meridian's decision was reasonable. Choosing to defer a known risk for quarterly earnings — that is not reasonable care.",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Foreperson",
+                "text": "Round 1: 3 Liable, 1 Not Liable. Juror #2 — what would change your mind?",
+                "phase": "Jury Deliberation",
+            },
+            {
+                "agent": "Juror",
+                "text": "Juror #2: If the emails weren't there, I would be solidly Not Liable. But the emails are there. Management knew and chose cost over safety. It bothers me that Okafor is suing them, but the emails speak for themselves. I'll change to Liable.",
                 "phase": "Jury Deliberation",
             },
             {
@@ -758,27 +1075,27 @@ DEMO_CASES: dict[str, dict] = {
             {"agent": "Bailiff", "text": "The shadow jury has convened for analysis.", "phase": "Shadow Jury"},
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 1: The email with 'NX-Battery-Specs-v3.pdf' combined with the 94% structural match — that's direct and circumstantial evidence aligning. Very strong for the plaintiff. [Vote: Liable, confidence 85%]",
+                "text": "Shadow Juror 1: The internal emails are the strongest evidence. Meridian's own engineers warned them. Management chose profit. Clear negligence. [Vote: Liable, confidence 92%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 2: The NDA is clear. Clause 3.1 covers 'all technical specifications.' Aether's email to PowerCell with a Nexus-labeled file is clear conduct. [Vote: Liable, confidence 78%]",
+                "text": "Shadow Juror 2: Okafor's financial interest in the outcome is concerning. But the documentary evidence — emails, satellite imagery — stands independently of his testimony. [Vote: Liable, confidence 78%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 3: The fact that the specific combination exists nowhere in published literature is decisive. The defense never rebutted that. [Vote: Liable, confidence 72%]",
+                "text": "Shadow Juror 3: Expert disagreement centers on what standards apply. But even by industry standards, 78% wall loss with a recommendation to shut down creates liability when you choose to ignore it. [Vote: Liable, confidence 84%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 4: Dr. Mehta seemed credible but his analysis was limited — he never saw the physical product. Dr. Marsh did. Physical inspection matters. [Vote: Liable, confidence 81%]",
+                "text": "Shadow Juror 4: The $4.7 million economic damage is well-documented. The spill was preventable. The emails prove knowledge. This is a textbook case of corporate negligence. [Vote: Liable, confidence 91%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 5: The NDA could be clearer about scope. But Aether's conduct — naming a file after Nexus's internal designation — shows they themselves believed it was covered. [Vote: Liable, confidence 69%]",
+                "text": "Shadow Juror 5: Reasonable care requires listening to your engineers. Meridian did not. That failure caused 80,000 gallons of oil to destroy a marine sanctuary. The liability is clear. [Vote: Liable, confidence 87%]",
                 "phase": "Shadow Jury",
             },
             {"agent": "Bailiff", "text": "The shadow jury has completed its analysis.", "phase": "Shadow Jury"},
@@ -786,7 +1103,7 @@ DEMO_CASES: dict[str, dict] = {
             {"agent": "Bailiff", "text": "All rise for the reading of the verdict.", "phase": "Verdict"},
             {
                 "agent": "Judge",
-                "text": "The jury finds Aether Laboratories LIABLE for breach of the Non-Disclosure Agreement with Nexus Corporation. We will now proceed to the damages phase.",
+                "text": "The jury finds Meridian Oil Corporation LIABLE for violation of the Clean Water Act. We will now proceed to the damages phase.",
                 "phase": "Verdict",
             },
             # ════════════════ PHASE 12: SENTENCING / DAMAGES ════════════════
@@ -797,38 +1114,38 @@ DEMO_CASES: dict[str, dict] = {
             },
             {
                 "agent": "Judge",
-                "text": "Having found Aether Labs liable, the court will now assess damages. Plaintiff's counsel — you may address the court.",
+                "text": "Having found Meridian liable, the court will assess civil penalties and damages. Plaintiff's counsel — your submission.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Your Honor, Nexus Corp. invested $18 million and four years developing the NX-7 cathode technology. The breach allowed PowerCell — a direct competitor — to bring a competing product to market in under nine months, bypassing R&D. Nexus lost a two-year exclusive market window valued at $3.2 million in projected revenue. Additionally, the loss of exclusivity depreciated Nexus's patent portfolio by an estimated $800,000. We request $4 million in compensatory damages plus legal costs.",
+                "text": "Your Honor, the Clean Water Act authorizes civil penalties of up to $56,800 per barrel of oil discharged. Meridian discharged approximately 1,905 barrels. The statutory maximum is $108 million. However, the plaintiff requests $4.7 million in economic damages to the fishing and tourism industries, $12 million in ecological restoration costs, and a civil penalty of $8 million reflecting the gravity of Meridian's knowing conduct — total $24.7 million.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Judge",
-                "text": "Defense counsel — you may address the court on mitigation.",
+                "text": "Defense counsel — your response on mitigation.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Defense",
-                "text": "Your Honor, Aether Labs is a 45-employee research startup. A $4 million judgment would bankrupt the company and eliminate 45 jobs. The plaintiff's $3.2 million revenue projection assumes 100% market capture, which is unrealistic in the battery industry where multiple suppliers serve the same customers. Furthermore, the information shared was largely general engineering knowledge — the specific proprietary elements constitute at most 20% of what was communicated. We ask the court to assess damages at no more than $500,000, reflecting actual lost licensing value.",
+                "text": "Your Honor, Meridian Oil has already spent $6.2 million on cleanup and containment. The company cooperated fully with the Coast Guard and NOAA. This was not a knowing discharge — it was an unforeseeable pipe failure. Meridian's 2,000-mile pipeline network has had zero spills in the past five years. The requested $24.7 million would force significant layoffs and facility closures in the Gulf region. We submit that $3 million in ecological restoration — which Meridian has already offered to fund voluntarily — plus a $2 million civil penalty is more than adequate.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Judge",
-                "text": "The court has considered both submissions. Nexus Corporation — your development investment was substantial, and the breach deprived you of the exclusivity the NDA was designed to protect. Aether Labs — the court acknowledges your limited resources and the fact that not all information shared was proprietary. However, the email's deliberate use of Nexus's internal file designation shows knowing conduct. The court awards the following: Compensatory damages of $1.4 million, reflecting the lost licensing opportunity over the two-year exclusivity window, discounted for realistic market share. Legal costs of $300,000. Total judgment: $1,700,000. This court is adjourned.",
+                "text": "The court has considered both submissions. Meridian Oil — your maintenance decision prioritized short-term cost savings over known safety risks. That knowing conduct distinguishes this case from a truly unforeseeable accident. However, the court also credits your cooperation with response efforts and your clean safety record prior to this incident. The court awards the following: $4.7 million in economic damages to affected fisheries and tourism businesses; $12 million in ecological restoration costs; and a civil penalty of $8 million. Total judgment: $24.7 million. Meridian Oil is further ordered to implement a revised pipeline inspection protocol at all offshore facilities within 180 days. This court is adjourned.",
                 "phase": "Sentencing",
             },
             # ════════════════ PHASE 13: COURT REPORTER ════════════════
             {
                 "agent": "Bailiff",
-                "text": "Case 24-CV-0342 — Nexus Corporation versus Aether Laboratories — is concluded. The trial record shall be certified by the court reporter.",
+                "text": "Case 24-CV-0287 — Coastal Protection Agency versus Meridian Oil Corporation — is concluded. The trial record shall be certified by the court reporter.",
                 "phase": "Court Reporter Log",
             },
             {
                 "agent": "System",
-                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CV-0342. Verdict: LIABLE. Damages: $1.7 million. Transcript includes 3 exhibits, 2 witnesses including 1 expert qualification, 3 objections with rulings, 2 pre-trial motions, 4-phase adversarial process, 5 shadow juror analyses, full damages hearing.]",
+                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CV-0287. Verdict: LIABLE. Damages: $24.7 million. Transcript includes 3 exhibits, 4 witnesses including 2 expert qualifications, 3 objections with rulings, 2 pre-trial motions, 4-phase adversarial process, 5 shadow juror analyses, full damages hearing.]",
                 "phase": "Court Reporter Log",
             },
             # ════════════════ ADJOURNED ════════════════
@@ -839,530 +1156,528 @@ DEMO_CASES: dict[str, dict] = {
             },
         ],
         "verdict": "LIABLE",
-        "win_probability": 0.82,
-        "sensitivity": "If the email had been excluded → Plaintiff win probability drops to 41%",
+        "win_probability": 0.78,
+        "sensitivity": "If the whistleblower emails were ruled inadmissible → Plaintiff win probability drops to 44%",
         "sentence": {
-            "sentence": "The court finds Aether Labs liable for breach of the NDA and awards compensatory damages.",
-            "term": "$1.4 million in compensatory damages, plus $300,000 in legal costs.",
-            "rationale": "The 94% structural match combined with the email containing Nexus's internal file designation constitutes clear breach. Damages reflect lost licensing revenue and legal expenses.",
+            "sentence": "The court finds Meridian Oil liable under the Clean Water Act and awards damages.",
+            "term": "$4.7 million economic damages, $12 million ecological restoration, $8 million civil penalty. Total: $24.7 million.",
+            "rationale": "Meridian knowingly deferred pipeline repair despite engineer recommendation. Emails demonstrate conscious cost-benefit decision favoring profit over safety. Damage to Point Reyes Marine Sanctuary is extensive and documented.",
         },
         "shadow_jury_narrative": [
             {
                 "name": "Shadow Juror 1",
-                "content": "The email with file name 'NX-Battery-Specs-v3.pdf' is damning. Combined with the 94% structural match, this is clear breach. [Vote: Liable]",
+                "content": "The internal emails are the strongest evidence. Meridian's own engineers warned them. Management chose profit. Clear negligence. [Vote: Liable]",
             },
             {
                 "name": "Shadow Juror 2",
-                "content": "The NDA explicitly covers 'all technical specifications.' Aether shared them with PowerCell. The intent is evident from the email. [Vote: Liable]",
+                "content": "Okafor's financial interest is concerning. But the documentary evidence stands independently. [Vote: Liable]",
             },
             {
                 "name": "Shadow Juror 3",
-                "content": "While cathode layering is known industry technique, the specific thickness ratios are proprietary. The match is too precise to be coincidence. [Vote: Liable]",
+                "content": "Even by industry standards, 78% wall loss with a recommendation to shut down creates liability when you choose to ignore it. [Vote: Liable]",
             },
             {
                 "name": "Shadow Juror 4",
-                "content": "The NDA wording could be clearer, but the email shows Aether knew the information was confidential. They proceeded anyway. [Vote: Liable]",
+                "content": "The $4.7 million economic damage is well-documented. The spill was preventable. The emails prove knowledge. [Vote: Liable]",
             },
             {
                 "name": "Shadow Juror 5",
-                "content": "Independent development is a weak defense when the file was literally named after Nexus's internal designation. [Vote: Liable]",
+                "content": "Reasonable care requires listening to your engineers. Meridian did not. That failure caused 80,000 gallons of oil to destroy a marine sanctuary. [Vote: Liable]",
             },
         ],
     },
-    "vance": {
-        "title": "State v. Emilia Vance — Double Homicide by Arson",
-        "jurisdiction": "United States · CA Central District",
+    "clinical": {
+        "title": "State v. Dr. Sarah Blake — Involuntary Manslaughter by Clinical Trial Misconduct",
+        "jurisdiction": "United States · Federal District Court, Southern District of New York",
         "description": (
-            "The defendant, Emilia Vance, is charged with two counts of first-degree murder "
-            "and one count of arson. On September 12th, a fire destroyed the Northside Storage "
-            "warehouse, killing night security guards Richard Torres and Dana Kim. The prosecution "
-            "alleges Vance, the warehouse's former manager, set the fire to destroy evidence of "
-            "an ongoing $340,000 embezzlement scheme. Forensic fire investigator Dr. Marcus Chen "
-            "identified an accelerant pour pattern at three separate origins, consistent with "
-            "deliberate ignition using gasoline. Cell tower records from AT&T place Vance's phone "
-            "near the warehouse at 11:30 PM — 10 minutes before the first 911 call. Security guard "
-            "Paul Brennan reported seeing a woman matching Vance's description flee the east entrance "
-            "at 11:35 PM. Brennan was fired by Vance six months prior for theft and has a prior "
-            "conviction for perjury in 2019. A hardware store receipt dated September 10th shows "
-            "a cash purchase of two 5-gallon gas cans signed 'E. Vance.' No fingerprints or DNA "
-            "link Vance to the scene. Vance claims she was home watching television; her brother "
-            "confirms she was there but admits he was asleep. Defense will call electrical engineer "
-            "Dr. Priya Sharma to testify that faulty wiring could have caused the fire."
+            "The defendant, Dr. Sarah Blake, is charged with one count of involuntary manslaughter "
+            "(18 U.S.C. § 1112) and one count of reckless endangerment following the death of "
+            "Marcus Chen, a 34-year-old participant in an unauthorized Phase I clinical trial. "
+            "Blake, an oncologist at Northwell Health, administered an experimental immunotherapy "
+            "drug — ONC-279 — to Chen without obtaining proper ethics committee approval. Chen died "
+            "from cytokine storm syndrome 72 hours after infusion. Internal hospital records show "
+            "Blake's ethics application was submitted to the IRB two days AFTER Chen received "
+            "the first dose. The consent forms were backdated to appear signed before treatment "
+            "began. The trial's dosing protocol deviated from the approved regimen: Blake "
+            "administered 2.5x the maximum safe starting dose. Dr. Blake claims Chen was informed "
+            "of the experimental nature and signed consent, and that the dosing was within her "
+            "medical judgment as the principal investigator."
         ),
         "questions": [
-            "Were accelerant residues tested for DNA or fingerprint evidence?",
-            "How far is the defendant's home from the Northside Storage warehouse?",
-            "Did the hardware store have surveillance footage matching the receipt date?",
-            "Does the cell tower data distinguish between being inside versus near the building?",
-            "Was the building's electrical system inspected before or after the fire?",
+            "When was the IRB application actually submitted relative to the first dose administered?",
+            "Were the consent forms signed before or after the first dose based on document analysis?",
+            "Did the administered dosing protocol match what was submitted in the IRB application?",
+            "Had Dr. Blake conducted similar unauthorized trials at any other institution?",
+            "Was the patient informed that the drug had never been tested in humans before?",
         ],
         "trial_script": [
             # ════════════════ PHASE 1: DISCOVERY ════════════════
             {
                 "agent": "Bailiff",
-                "text": "All rise. The Honorable Justice Cross presiding. The court is now in session for the Discovery Disclosure phase.",
+                "text": "All rise. The Honorable Justice Vance presiding. The court is now in session for the Discovery Disclosure phase.",
                 "phase": "Discovery",
             },
             {
                 "agent": "Judge",
-                "text": "Be seated. We proceed with discovery disclosure in the matter of State versus Emilia Vance — two counts of first-degree murder and arson. Mr. Mercer, the People will disclose first.",
+                "text": "Be seated. The matter of State versus Dr. Sarah Blake — involuntary manslaughter and reckless endangerment. The People will disclose first.",
                 "phase": "Discovery",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The People disclose the following: (1) Accelerant residue analysis by Dr. Marcus Chen; (2) AT&T cell tower records for device #310-555-0198; (3) Security guard Paul Brennan's written statement; (4) Hardware store receipt from September 10th; (5) Medical examiner autopsy reports for Torres and Kim.",
+                "text": "The People disclose: (1) IRB application records showing submission date of March 15th — two days after the first dose on March 13th; (2) Signed consent forms for Marcus Chen bearing the date March 12th, with ink analysis suggesting the dates were altered; (3) Pharmacy dispensing records showing ONC-279 was administered at 2.5x the maximum safe starting dose; (4) Medical examiner report confirming cytokine storm syndrome as cause of death; (5) Email correspondence from Dr. Blake to a colleague stating 'We can submit the IRB retroactively — the patient is too sick to wait.'",
                 "phase": "Discovery",
             },
             {
                 "agent": "Defense",
-                "text": "The defense discloses: (1) Expert report by Dr. Priya Sharma on electrical anomalies in the southeast quadrant; (2) Sworn affidavit by James Vance confirming his sister's presence at home on the night in question.",
+                "text": "The defense discloses: (1) Dr. Blake's expert report by Dr. Jonathan Weiss, clinical pharmacologist, concluding that 2.5x dose was within standard Phase I safety margins for patients with treatment-resistant cancer; (2) Marcus Chen's medical records documenting his stage IV metastatic disease and his documented verbal consent to 'try anything'; (3) Character references from 12 colleagues attesting to Dr. Blake's ethical conduct over 15 years of practice.",
                 "phase": "Discovery",
             },
             {
                 "agent": "Judge",
-                "text": "Disclosure is complete. The court notes the defense has reserved the right to call additional witnesses. Proceed to pre-trial motions.",
+                "text": "Disclosure is complete. The court notes the central issue: whether Dr. Blake's deviation from protocol constitutes criminal negligence or a reasonable exercise of medical judgment. Proceed to pre-trial motions.",
                 "phase": "Discovery",
             },
             # ════════════════ PHASE 2: PRE-TRIAL MOTIONS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to pre-trial motions.", "phase": "Motions"},
             {
                 "agent": "Judge",
-                "text": "Defense counsel, you filed a motion to suppress the cell tower records. State your grounds.",
+                "text": "Defense counsel — your motion to exclude the email as taken out of context. State your grounds.",
                 "phase": "Motions",
             },
             {
                 "agent": "Defense",
-                "text": "Your Honor, the prosecution's cell tower expert did not provide a written methodology. AT&T's standard records custodian cannot verify the GPS radius of the tower ping. Without verifiable methodology, the records lack proper foundation under FRE 702 and Daubert.",
+                "text": "Your Honor, the email states 'We can submit the IRB retroactively.' The prosecution presents this as evidence of intent to deceive. But in context, Dr. Blake was referring to the standard IRB modification process — where retrospective approval is permitted for urgent medical interventions under 21 CFR 56.104. The email is ambiguous and unfairly prejudicial under FRE 403.",
                 "phase": "Motions",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The People respond: the records custodian will testify to the normal course of business record-keeping under FRE 803(6). Cell tower data is routinely admitted. The defense is conflating weight with admissibility.",
+                "text": "The email is a party-opponent statement under FRE 801(d)(2). Dr. Blake wrote it. She said 'retroactively.' That is her own words. The context will be explored at trial. But the statement itself is admissible as an admission.",
                 "phase": "Motions",
             },
             {
                 "agent": "Judge",
-                "text": "Motion to suppress cell tower records is DENIED. The records are business records under FRE 803(6). The radius margin goes to weight, not admissibility — the defense may cross-examine on it.",
+                "text": "Motion DENIED. The email is admissible as a party-opponent statement. The defense may present contextual evidence at trial. The jury will weigh the meaning.",
                 "phase": "Motions",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The People move under FRE 609(a)(1) to admit guard Paul Brennan's 2019 perjury conviction for impeachment purposes. The defense concedes the credibility of Brennan is material.",
+                "text": "The People move to admit Dr. Blake's prior disciplinary history from New York Presbyterian Hospital regarding an unauthorized research study in 2018, under FRE 404(b) to show pattern of conduct.",
                 "phase": "Motions",
             },
             {
                 "agent": "Defense",
-                "text": "Yes, Your Honor. The defense acknowledges Brennan's credibility is relevant and does not oppose admission. However, we request that the prior firing — which shows Brennan's bias against the defendant — also be admitted.",
+                "text": "Objection — FRE 404(b) prohibits character evidence. The 2018 matter was a documentation error, not a patient safety issue. Introducing it would be highly prejudicial and irrelevant to this case.",
                 "phase": "Motions",
             },
             {
                 "agent": "Judge",
-                "text": "Motion GRANTED in part. Brennan's 2019 perjury conviction is admitted for impeachment purposes under FRE 609. Evidence of his termination by the defendant is also admissible to show bias. Both sides may explore these on cross-examination.",
+                "text": "Motion DENIED. The 2018 matter is too dissimilar — a documentation error is not the same as an unauthorized clinical trial. The prejudicial effect substantially outweighs any probative value. FRE 403, 404(b).",
                 "phase": "Motions",
             },
             # ════════════════ PHASE 3: OPENING STATEMENTS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to opening statements.", "phase": "Opening"},
-            {"agent": "Judge", "text": "Mr. Mercer — the People's opening statement, please.", "phase": "Opening"},
+            {"agent": "Judge", "text": "Mr. Mercer — the People's opening statement.", "phase": "Opening"},
             {
                 "agent": "Prosecutor",
-                "text": "Ladies and gentlemen of the jury: on September 12th, two security guards — Richard Torres and Dana Kim — went to work at Northside Storage warehouse. They never came home. The evidence will show that Emilia Vance, the warehouse's former manager, doused that building in gasoline and ignited it to conceal $340,000 in embezzled funds. A forensic fire investigator traced the fire to three separate accelerant pour points. Cell tower records place the defendant's phone at the warehouse ten minutes before the blaze. A receipt signed 'E. Vance' documents the purchase of gas cans two days earlier. And at 11:35 PM, a guard saw a woman matching Vance's description running from the east entrance. Two lives were taken. The evidence points to one conclusion.",
+                "text": "Ladies and gentlemen — Marcus Chen was dying of cancer. He came to Northwell Health for treatment, and he put his trust in Dr. Sarah Blake. What he did not know was that Dr. Blake was not following the rules. She gave him an experimental drug that had never been tested in humans. She gave him two and a half times the maximum safe dose. She did not get permission from the ethics committee beforehand — she submitted the paperwork two days AFTER she injected him. And when the patient's mother asked for the consent form, the date had been altered. Marcus Chen died in agony from cytokine storm — his immune system attacking his own organs — because Dr. Blake chose speed over safety. The evidence will show this was not an error — it was criminal recklessness.",
                 "phase": "Opening",
             },
             {"agent": "Judge", "text": "Defense counsel.", "phase": "Opening"},
             {
                 "agent": "Defense",
-                "text": "Members of the jury — the prosecution wants you to convict on a tower ping, a receipt, and a shadowy silhouette. But here is what they do not have: no fingerprints at the scene. No DNA on any container. No surveillance footage showing my client anywhere near that warehouse. No eyewitness who can identify her face. Their star witness — Paul Brennan — was fired by Ms. Vance for stealing from this very warehouse, and he was convicted of lying under oath. The fire investigator never examined the actual wiring, which our electrical engineer will show was corroded and unsafe. Emilia Vance is innocent. The state has not met its burden.",
+                "text": "Members of the jury — Marcus Chen had stage IV metastatic melanoma. He had exhausted every approved treatment. He had weeks to live. Dr. Blake spent hours with him and his family discussing the experimental option. He said — and his family confirms — 'I want to try anything.' Experimental cancer trials are not like taking an aspirin. There are risks. The IRB process has an emergency exception precisely for patients like Marcus who do not have weeks to wait. Dr. Blake followed that exception. The dose she chose was within the range used in similar Phase I trials. And the consent form — dated March 12th — was signed by Marcus Chen himself. The tragedy is that cancer took Marcus Chen. But Dr. Blake did not kill him. She tried to save him.",
                 "phase": "Opening",
             },
             # ════════════════ PHASE 4: EVIDENCE PRESENTATION ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to evidence presentation.", "phase": "Evidence"},
             {
                 "agent": "Prosecutor",
-                "text": "The People submit Exhibit A: the accelerant residue analysis report by Dr. Marcus Chen, documenting gasoline residues at three separate origin points in the southeast quadrant.",
+                "text": "The People submit Exhibit A: the IRB application records showing a submission date of March 15th. Marcus Chen received his first dose on March 13th.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "Objection — lack of foundation, Your Honor. Dr. Chen has not yet been qualified as an expert in fire forensics. His credentials must be established before his report can be admitted.",
+                "text": "Objection — the IRB application is a hospital record. It does not reflect the emergency verbal authorization Dr. Blake received from the IRB chair on March 12th under 21 CFR 56.104(c). The written submission is not the whole story.",
+                "phase": "Evidence",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "The People will call the IRB chair to testify there was no verbal authorization. The written record is the official documentation.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Judge",
-                "text": "Sustained. Exhibit A is conditionally admitted pending expert qualification of Dr. Chen during witness examination. FRE 702. The report will be admitted subject to voir dire.",
+                "text": "Overruled. Exhibit A is admitted as a business record under FRE 803(6). The defense may present evidence of verbal authorization.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The People submit Exhibit B: the hardware store receipt dated September 10th at 4:15 PM — two 5-gallon gas cans, cash purchase, signed 'E. Vance.'",
+                "text": "The People submit Exhibit B: the signed consent forms for Marcus Chen. The date line reads March 12th — but the People's forensic document analyst will testify that the '2' in '12' was written over a '3' — meaning the original date was March 13th, altered to appear as March 12th.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "Objection — hearsay. The receipt is an out-of-court statement offered for the truth of the matter asserted: that Emilia Vance purchased gas cans. It is testimonial hearsay.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The receipt is a business record, Your Honor. The hardware store's manager will testify that the receipt was generated in the regular course of business at or near the time of the transaction, and that it is the store's regular practice to record such sales. FRE 803(6) — the business records exception.",
+                "text": "Objection — hearsay and foundation. The consent form is an out-of-court statement offered for the truth of its contents. And the prosecution's document analyst has not been qualified. FRE 1002 — the Best Evidence Rule requires the original document for analysis, and we dispute the chain of custody.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Judge",
-                "text": "Overruled. The receipt qualifies as a business record under FRE 803(6) — made at or near the time by a person with knowledge, kept in the regular course of business, and the store's regular practice. Weight is a matter for the jury.",
+                "text": "Overruled on hearsay — the consent form is not offered for the truth of its contents but as physical evidence of a document. Sustained as to foundation — the exhibit is conditionally admitted pending expert qualification. FRE 104(b). Proceed.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The People submit Exhibit C: crime scene photographs, including images of the victims' remains as they were found by firefighters.",
+                "text": "The People submit Exhibit C: pharmacy dispensing records showing ONC-279 was prepared and dispensed at 0.75 mg/kg — two and a half times the maximum starting dose of 0.3 mg/kg specified in the IND application.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "Objection — FRE 403. The probative value of these photographs is substantially outweighed by the danger of unfair prejudice. They will inflame the jury's emotions without adding any fact in dispute.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "The photos show the location of the victims relative to the three origin points Dr. Chen identified. They are necessary to establish that both victims were trapped by the same three fires.",
+                "text": "No objection, Your Honor. The dose is not in dispute. The dispute is about whether 0.75 mg/kg was appropriate for this patient's condition.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Judge",
-                "text": "Overruled. The People have established probative value — the photos demonstrate the spatial relationship between the fire origins and the victims. The court finds their probative value not substantially outweighed by prejudice. FRE 403.",
+                "text": "Exhibit C admitted.",
                 "phase": "Evidence",
             },
             {
                 "agent": "Defense",
-                "text": "The defense submits Exhibit D: Dr. Priya Sharma's electrical inspection report, documenting corroded wiring in the southeast quadrant consistent with an electrical fire origin.",
-                "phase": "Evidence",
-            },
-            {
-                "agent": "Prosecutor",
-                "text": "No objection, Your Honor. We welcome the defense's alternate theory.",
+                "text": "The defense submits Exhibit D: Marcus Chen's medical records documenting stage IV metastatic melanoma with brain metastases, ECOG performance status 3 — indicating he was bedridden more than 50% of the time, with an estimated survival of 4-6 weeks without intervention.",
                 "phase": "Evidence",
             },
             {"agent": "Judge", "text": "Exhibit D admitted without objection.", "phase": "Evidence"},
             # ════════════════ PHASE 5: WITNESS EXAMINATION ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to witness examination.", "phase": "Witness"},
-            # --- Expert Witness: Dr. Marcus Chen ---
+            # --- IRB Chair: Dr. Patricia Okonkwo ---
             {
                 "agent": "Prosecutor",
-                "text": "The People call Dr. Marcus Chen, Chief Fire Investigator for the California State Fire Marshal's Office. Dr. Chen — please state your qualifications for the court.",
+                "text": "The People call Dr. Patricia Okonkwo, Chair of the Northwell Health Institutional Review Board. Dr. Okonkwo — did Dr. Blake receive verbal authorization to proceed before March 15th?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "I hold a Ph.D. in Combustion Chemistry from Stanford University. I have 22 years of experience in fire investigation, have testified as an expert in 47 trials, and have authored 18 peer-reviewed papers on accelerant detection methodology. I am certified by the National Association of Fire Investigators.",
+                "text": "No. There is no record of any verbal authorization. Our standard process requires written submission followed by full committee review. Emergency exceptions under 21 CFR 56.104(c) require documentation within 48 hours — Dr. Blake never provided any.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Had Dr. Blake ever contacted you by phone or email about an emergency exception?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "No. I first learned of this trial when our compliance officer flagged the March 15th application — two days after the patient had already been dosed.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ IRB records reviewed. No emergency exception documentation exists.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Okonkwo — is it possible that Dr. Blake spoke with another IRB committee member or an administrative staffer who verbally indicated the application would be approved?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I am the only person authorized to grant emergency exceptions. No staff member has that authority.",
+                "phase": "Witness",
+            },
+            # --- Forensic Document Analyst ---
+            {
+                "agent": "Prosecutor",
+                "text": "The People call Dr. Karen Sato, forensic document examiner. Dr. Sato — your qualifications?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I hold a Ph.D. in Forensic Document Examination from George Washington University. I have 16 years of experience, am a certified member of the American Board of Forensic Document Examiners, and have testified in 38 federal and state cases involving document authentication and alteration analysis.",
                 "phase": "Witness",
             },
             {
                 "agent": "Judge",
-                "text": "Dr. Chen — are your methodologies generally accepted in the scientific community?",
+                "text": "Defense — voir dire?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Sato — ink dating analysis is not considered reliable by all courts. The Daubert standard requires general acceptance in the scientific community. Has your specific methodology been peer-reviewed?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "Yes, Your Honor. Gas chromatography-mass spectrometry is the gold standard for accelerant residue analysis. It is accepted internationally and has been validated in hundreds of studies.",
+                "text": "Yes. My methodology — which combines microscopic examination, infrared spectrometry, and chemical solvent testing — was published in the Journal of Forensic Sciences in 2021 and has been cited in 12 subsequent peer-reviewed studies.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "No further on qualifications.",
                 "phase": "Witness",
             },
             {
                 "agent": "Judge",
-                "text": "Defense counsel, would you like to voir dire the witness on his qualifications?",
+                "text": "The court qualifies Dr. Sato as an expert in forensic document examination under FRE 702. Exhibit B is formally admitted.",
                 "phase": "Witness",
             },
             {
-                "agent": "Defense",
-                "text": "Dr. Chen — have you ever conducted a field test under conditions that also included electrical fire ignition? And has your accelerant detection methodology ever been successfully challenged in a Daubert hearing?",
+                "agent": "Prosecutor",
+                "text": "Dr. Sato — describe your analysis of the consent form.",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "Yes to the first — I have investigated fires with multiple potential causes. To the second — my methodology was subjected to a Daubert challenge in the 2017 Arroyo County case and was upheld by the court of appeals.",
+                "text": "The date line shows two layers of ink. The underlying digit was written as '3' — consistent with March 13th. A second application of ink converted it to '12' — March 12th. The alteration was made with a pen from a different batch — the ink chemical composition differs from the surrounding text. The signature block was signed at the same time as the altered date, not at the time of the original '3'.",
                 "phase": "Witness",
             },
-            {"agent": "Defense", "text": "No further questions on qualifications, Your Honor.", "phase": "Witness"},
+            {
+                "agent": "Prosecutor",
+                "text": "What does that indicate?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The consent form was originally dated March 13th — the day the dose was administered. The date was later changed to March 12th to make it appear the consent was obtained a day before treatment. The signature was added at the time of the alteration, not at the original signing.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Methodology is peer-reviewed. Findings are documented in expert report.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Sato — your alteration date analysis assumes the document was not handled or exposed to conditions that could affect ink layers. Dr. Blake kept this form in her office for three weeks before producing it. Could normal handling have caused the chemical differences you observed?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Normal handling does not cause chemical composition differences between two ink applications on the same document. The ink batches are chemically distinct — that cannot be explained by handling or environmental exposure.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "And you cannot determine WHO made the alteration, can you? The form could have been altered by anyone in Dr. Blake's office.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I cannot identify the person who made the alteration. I can only identify that an alteration was made.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "Dr. Sato — one question on redirect. Regardless of who physically altered the document, can you confirm the date was changed from March 13th to March 12th?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. The underlying digit was a '3' — the day of treatment. The altered '12' was applied later. That finding is chemically certain.",
+                "phase": "Witness",
+            },
+            # --- Medical Examiner ---
+            {
+                "agent": "Prosecutor",
+                "text": "The People call Dr. Michael Torres, Chief Medical Examiner for New York County. Dr. Torres — the cause of death for Marcus Chen?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Cytokine storm syndrome — an acute systemic inflammatory response triggered by immune activation. In the context of this case, it was caused by the administration of ONC-279 at 0.75 mg/kg. The massive release of cytokines led to multiorgan failure including acute respiratory distress syndrome, acute kidney injury, and hepatic failure. Mr. Chen died approximately 72 hours after infusion.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "In your expert opinion, was the dose a substantial factor in causing death?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Unequivocally yes. The probability of cytokine storm at the approved starting dose of 0.3 mg/kg is approximately 3-5%. At 0.75 mg/kg, the probability increases to approximately 40-60%. The dose escalation was the proximate cause of the fatal reaction.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Fact Checker",
+                "text": "✓ Dosing probability data sourced from IND application and published Phase I safety data.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Torres — you cited the IND application data. But the IND data is for patients with solid tumors who have not exhausted treatment options. Mr. Chen had stage IV disease with brain metastases and ECOG 3. There is no published safety data for that population. The 40-60% probability you cite is an extrapolation, not a known fact — correct?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The probability range is an extrapolation based on the known dose-response relationship of ONC-279. No Phase I trial has been conducted specifically in ECOG 3 patients — that is true. The extrapolation is medically reasonable.",
+                "phase": "Witness",
+            },
+            # --- Blake's Defense Expert: Dr. Jonathan Weiss ---
+            {
+                "agent": "Defense",
+                "text": "The defense calls Dr. Jonathan Weiss, Professor of Clinical Pharmacology at Columbia University. Dr. Weiss — your qualifications?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I hold an M.D. and Ph.D. in Pharmacology from Johns Hopkins. I have 22 years of experience in oncology drug development, have served as principal investigator on 14 Phase I trials, and have published over 60 papers on dose-finding methodology in oncology. I currently serve on the FDA's Oncologic Drugs Advisory Committee.",
+                "phase": "Witness",
+            },
             {
                 "agent": "Judge",
-                "text": "The court finds Dr. Chen qualified as an expert in fire forensics under FRE 702. Exhibit A — the accelerant report — is formally admitted. Dr. Chen, you may testify.",
-                "phase": "Witness",
-            },
-            # --- Direct: Dr. Chen ---
-            {
-                "agent": "Prosecutor",
-                "text": "Dr. Chen — describe your findings at Northside Storage warehouse.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I identified the presence of gasoline residues — a medium petroleum distillate — at three physically distinct locations in the southeast quadrant. The pour pattern indicates deliberate human placement. The fires were not connected by electrical pathways or shared fuel sources — three independent ignitions.",
+                "text": "Prosecution — voir dire?",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Could faulty electrical wiring have caused this pattern?",
+                "text": "Dr. Weiss — you serve on the FDA advisory committee that evaluates oncology drugs. You also consult for pharmaceutical companies developing those same drugs. Is that not a conflict of interest?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "No. Electrical fires start at a single point and follow wiring conduits. A three-point, simultaneous ignition with accelerant residues is inconsistent with any natural or electrical cause. I examined the wiring at all three locations — it was intact.",
+                "text": "I recuse myself from any FDA decision involving companies I consult for. My advisory role is separate from my consulting work. All conflicts are disclosed.",
+                "phase": "Witness",
+            },
+            {"agent": "Prosecutor", "text": "No further on qualifications.", "phase": "Witness"},
+            {
+                "agent": "Judge",
+                "text": "The court qualifies Dr. Weiss as an expert in clinical pharmacology under FRE 702.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Dr. Weiss — in your opinion, was 0.75 mg/kg a reasonable dose for Marcus Chen given his condition?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Yes. In Phase I oncology trials, dose escalation is guided by the patient's condition. For a patient with weeks to live, the risk-benefit calculus shifts. The standard 3+3 dose escalation design starts at 0.3 mg/kg in fit patients. For a moribund patient, many investigators would consider up to 1.0 mg/kg justified. Dr. Blake's choice of 0.75 mg/kg was within the range of reasonable medical judgment.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Did Dr. Blake have a duty to wait for full IRB approval before administering the drug?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "The regulations at 21 CFR 56.104(c) permit emergency use without prior IRB approval when the patient's life is at immediate risk and no alternative exists. Mr. Chen had no remaining standard treatment options. An argument can be made that this fell within the emergency exception — even if the paperwork was not perfectly completed.",
                 "phase": "Witness",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Testimony consistent with report. No discrepancies detected.",
+                "text": "✓ Expert offered opinion on standard of care. Jury may weigh credibility.",
                 "phase": "Witness",
             },
-            # --- Cross: Dr. Chen (defense attacks methodology) ---
-            {
-                "agent": "Defense",
-                "text": "Dr. Chen — you stated the wiring at the three origin points was intact. Did you personally examine the wiring in the building's eastern corridor — that is, the wiring that Dr. Sharma later identified as corroded?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I examined the wiring within an 8-foot radius of each origin point, which is standard NFPA 921 protocol. The eastern corridor is approximately 40 feet from the nearest origin. I did not examine that corridor's wiring.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "So it is possible — scientifically — that a fire started in the eastern corridor from faulty wiring, and then separately ignited gasoline residue stored in the southeast quadrant?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Theoretically, a fire could travel 40 feet along wooden shelving. But my analysis shows the southeast quadrant was the origin based on deepest char patterns. The eastern corridor showed secondary burn damage — meaning the fire reached it later.",
-                "phase": "Witness",
-            },
-            # --- Redirect: Dr. Chen ---
             {
                 "agent": "Prosecutor",
-                "text": "Dr. Chen — one question on redirect. In your 22 years and 47 trials, has NFPA 921's standard 8-foot radius examination protocol EVER failed to correctly identify the fire's origin point?",
+                "text": "Dr. Weiss — you said the dose was within reasonable medical judgment. But the IND application clearly states 0.3 mg/kg as the maximum safe starting dose. Dr. Blake exceeded that by 150%. Does the term 'maximum safe starting dose' leave room for a 150% deviation?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "No. The NFPA 921 protocol has been validated across thousands of investigations. I have never encountered a case where the correct origin was more than the standard protocol distance from the deepest char.",
+                "text": "IND applications state conservative starting doses designed for the general clinical trial population. In specific clinical circumstances, the investigator has discretion to adjust. This is standard practice in oncology.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Prosecutor",
+                "text": "And the backdated consent form — is it 'standard practice' to alter a patient's consent date?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "I do not know who altered that form. I am not testifying about the consent form. I am testifying about the dosing decision.",
+                "phase": "Witness",
+            },
+            # --- Dr. Sarah Blake (defendant testimony) ---
+            {
+                "agent": "Defense",
+                "text": "The defense calls Dr. Sarah Blake. Dr. Blake — describe your relationship with Marcus Chen.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "Marcus was my patient for eight months. I treated him through two lines of chemotherapy, immunotherapy, and radiation. When everything failed, I discussed the ONC-279 trial with him. I was transparent — I told him it had never been tested in humans, that the risks included possible death, and that it was unlikely to work. He said he wanted to try. He said 'I'm not afraid of the risk — I'm afraid of not trying.' I believed I was giving him a chance.",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Defense",
+                "text": "Why did you administer the dose before receiving written IRB approval?",
+                "phase": "Witness",
+            },
+            {
+                "agent": "Witness",
+                "text": "His condition was deteriorating rapidly. He developed new brain metastases on March 10th. The standard IRB process takes 4-6 weeks. He did not have 4-6 weeks. I believed the emergency exception applied. I take full responsibility for the decision — but I made it in his best interest.",
                 "phase": "Witness",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Statement verified. NFPA 921 is the industry standard.",
-                "phase": "Witness",
-            },
-            # --- Eyewitness: Paul Brennan (with impeachment hook) ---
-            {
-                "agent": "Prosecutor",
-                "text": "The People call Paul Brennan. Mr. Brennan — you were working as a security guard at Northside Storage on September 12th. Describe what you saw at 11:35 PM.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I was making my rounds near the east entrance. I saw a woman running from the building — dark coat, shoulder-length brown hair, about five-foot-six. She got into a silver sedan and drove off. Maybe 90 seconds later I smelled smoke. I called 911.",
-                "phase": "Witness",
-            },
-            {"agent": "Prosecutor", "text": "Was the area well-lit?", "phase": "Witness"},
-            {
-                "agent": "Witness",
-                "text": "There are floodlights above the east entrance. Yes — well-lit. I could see her clearly.",
-                "phase": "Witness",
-            },
-            # --- Cross: Brennan (impeachment — bias + character) ---
-            {
-                "agent": "Defense",
-                "text": "Mr. Brennan — you were fired by Emilia Vance from this very warehouse six months before the fire, correct?",
-                "phase": "Witness",
-            },
-            {"agent": "Witness", "text": "I... yes. She terminated my employment.", "phase": "Witness"},
-            {
-                "agent": "Defense",
-                "text": "The termination letter states you were fired for theft of warehouse inventory — $8,200 worth of copper fittings. Is that correct?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "That's what the letter says. I maintain I was wrongly accused.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "And in 2019 — you were convicted of perjury for lying under oath in a civil deposition about a former employer. You served six months, did you not?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Yes... that was a misunderstanding. But yes, I was convicted.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "No further questions, Your Honor. The jury can assess Mr. Brennan's credibility.",
-                "phase": "Witness",
-            },
-            # --- Redirect: Brennan ---
-            {
-                "agent": "Prosecutor",
-                "text": "Mr. Brennan — has your testimony today about what you saw at 11:35 PM on September 12th ever changed from your initial 911 call or your deposition?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "No. It has been consistent from the night of the fire. I have never wavered on what I saw.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Direct testimony is consistent with 911 call transcript.",
-                "phase": "Witness",
-            },
-            # --- Investigative Witness: Detective Reyes ---
-            {
-                "agent": "Prosecutor",
-                "text": "The People call Detective Paula Reyes of the Arson Investigation Unit. Detective — describe the cell tower data linking Vance to the scene.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "AT&T records show device number 310-555-0198 — registered to Emilia Vance — connected to tower 847 at 11:27 PM and disconnected at 11:34 PM. That tower covers a sector radius of approximately 1,200 feet that includes the warehouse. Her phone did not connect to any tower near her home address between those times.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Records corroborated. Tower 847 coverage map verified.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Defense",
-                "text": "Detective — the 1,200-foot radius you mentioned covers the warehouse. Does it also cover the adjacent industrial park, the truck stop, and the twenty-four-hour gym across the street?",
-                "phase": "Witness",
-            },
-            {"agent": "Witness", "text": "Yes. The sector covers all those locations.", "phase": "Witness"},
-            {
-                "agent": "Defense",
-                "text": "So her phone being in that 1,200-foot radius does not prove she was INSIDE the warehouse.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "That is correct. The data places the phone in the coverage area — not inside the building.",
-                "phase": "Witness",
-            },
-            # --- Defendant: Emilia Vance ---
-            {
-                "agent": "Defense",
-                "text": "The defense calls Emilia Vance. Ms. Vance — where were you on the night of September 12th at 11:30 PM?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "I was at home watching television. I lived with my brother James at 1842 Oakdale Drive. I never left the house that night.",
-                "phase": "Witness",
-            },
-            {"agent": "Defense", "text": "Why was your phone near the warehouse?", "phase": "Witness"},
-            {
-                "agent": "Witness",
-                "text": "I can't explain that. The phone was in my possession at home. I've asked AT&T to audit the tower data — maybe it logged the wrong tower.",
+                "text": "✓ Medical records confirm rapid deterioration in early March.",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Ms. Vance — the hardware store receipt bears your signature. Two 5-gallon gas cans, purchased two days before the fire. For what purpose?",
+                "text": "Dr. Blake — the consent form. Who altered the date from March 13th to March 12th?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "That's not my signature. 'E. Vance' — that could be anyone. My married name is Vance. My maiden name was Ellis. I never sign as E. Vance.",
+                "text": "I did not alter the date. I reviewed the form with Marcus on March 12th. We discussed it for about 45 minutes. He signed it. I do not know why the forensic analyst found two ink layers. I did not change it.",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "The receipt clerk described the buyer — dark coat, brown hair, five-foot-six. Is there another woman matching that description who would use the initials E. Vance?",
+                "text": "But the analyst testified that the ink from the '12' is chemically different from the surrounding text. How do you explain that?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "Object — my counsel... I don't know who that was. But it wasn't me.",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Fact Checker",
-                "text": "✓ No evidence linking specific clerk to specific transaction.",
-                "phase": "Witness",
-            },
-            # --- Character Witness: James Vance ---
-            {
-                "agent": "Defense",
-                "text": "The defense calls James Vance. Mr. Vance — you live with your sister at 1842 Oakdale Drive. Was she home the night of September 12th?",
-                "phase": "Witness",
-            },
-            {
-                "agent": "Witness",
-                "text": "Yes. I saw her in the living room around 9 PM. When I went to bed at ten, her car was still in the driveway. In the morning, it was still there. She was home all night.",
+                "text": "I cannot explain it. I used the pen on my desk — perhaps the pen has two ink cartridges. I am not a document examiner. I only know I did not alter any date.",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Mr. Vance — you testified you were asleep from 10 PM to 7 AM. You cannot confirm your sister was home at 11:30 PM, can you?",
+                "text": "You emailed a colleague saying 'We can submit the IRB retroactively.' Those are your words, correct?",
                 "phase": "Witness",
             },
             {
                 "agent": "Witness",
-                "text": "No... I was asleep. But her car was there in the morning.",
+                "text": "Yes. I wrote that. But 'retroactively' referred to the modification process under the emergency exception. I was expressing confidence that our IRB would approve the retrospective documentation. I was not describing a plan to deceive.",
                 "phase": "Witness",
             },
             {
                 "agent": "Prosecutor",
-                "text": "And she had a second key to your car — your silver sedan. Is that correct?",
-                "phase": "Witness",
-            },
-            {"agent": "Witness", "text": "...Yes.", "phase": "Witness"},
-            {
-                "agent": "Fact Checker",
-                "text": "✓ Vehicle registration confirms James Vance owns a silver sedan.",
+                "text": "No further questions.",
                 "phase": "Witness",
             },
             # ════════════════ PHASE 6: REBUTTAL EVIDENCE ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to rebuttal evidence.", "phase": "Rebuttal"},
-            {
-                "agent": "Judge",
-                "text": "Mr. Mercer — the prosecution may present rebuttal evidence.",
-                "phase": "Rebuttal",
-            },
+            {"agent": "Judge", "text": "Prosecution — rebuttal?", "phase": "Rebuttal"},
             {
                 "agent": "Prosecutor",
-                "text": "The People recall Dr. Chen in rebuttal. Dr. Chen — the defense has introduced Exhibit D suggesting electrical wiring was corroded. Does corroded wiring cause three simultaneous gasoline fires at separate locations?",
+                "text": "The defense asks you to believe in the 'emergency exception.' But the IRB chair — Dr. Okonkwo — testified there was no verbal authorization. The defense claims the dose was appropriate — but the IND application says 0.3 mg/kg is the maximum safe starting dose. Dr. Weiss, the defense's own expert, admitted he was not testifying about the consent form — because he cannot explain it. The altered date. The unauthorized trial. The fatal dose. Three separate failures. Each one, on its own, is a deviation from the standard of care. Together, they constitute criminal negligence.",
                 "phase": "Rebuttal",
             },
-            {
-                "agent": "Witness",
-                "text": "No. Even if wiring were severely corroded, the maximum temperature of an electrical arc is insufficient to ignite gasoline at a distance. Gasoline requires direct flame or spark contact. Three independent fires at separated locations, each with accelerant residue — that is human ignition.",
-                "phase": "Rebuttal",
-            },
-            {"agent": "Judge", "text": "Defense counsel — surrebuttal?", "phase": "Rebuttal"},
+            {"agent": "Judge", "text": "Defense — surrebuttal?", "phase": "Rebuttal"},
             {
                 "agent": "Defense",
-                "text": "Dr. Chen — you have not examined the wire samples that Dr. Sharma analyzed. So your opinion on the eastern corridor wiring is theoretical — not based on direct observation of that specific wiring, correct?",
-                "phase": "Rebuttal",
-            },
-            {
-                "agent": "Witness",
-                "text": "I did not examine those specific wire samples, correct. My analysis is based on NFPA 921 methodology applied to the origin points I did examine.",
+                "text": "The prosecution conflates paperwork errors with criminal intent. Dr. Blake spent 45 minutes with Marcus Chen explaining the risks. The form was signed. The emergency exception exists for patients exactly like Marcus — dying patients with no options. The dose was within the range Dr. Weiss — an FDA advisor — considers reasonable. The prosecution has not proven beyond reasonable doubt that Dr. Blake acted with criminal recklessness. They have proven she filled out paperwork imperfectly while trying to save a dying man's life. That is not manslaughter.",
                 "phase": "Rebuttal",
             },
             {
                 "agent": "Fact Checker",
-                "text": "✓ Both parties' expert testimony noted. Jury may weigh competing opinions.",
+                "text": "✓ All evidence and testimony noted. Jury to determine criminal intent.",
                 "phase": "Rebuttal",
             },
             # ════════════════ PHASE 7: CLOSING ARGUMENTS ════════════════
             {"agent": "Bailiff", "text": "The court will now proceed to closing arguments.", "phase": "Closing"},
             {
                 "agent": "Prosecutor",
-                "text": "Members of the jury — consider what you have heard. An expert with 22 years of experience found three separate gasoline fires, each set deliberately. Cell tower records put the defendant's phone at the warehouse ten minutes before the blaze. A receipt, signed in a name matching the defendant, documents the purchase of gas cans two days before. A guard saw a woman matching the defendant's description fleeing. The defendant had motive — $340,000 in embezzled money and a fire that conveniently destroyed the paper trail. That is not coincidence. That is murder in the first degree. The People ask you to return a verdict of Guilty on all counts.",
+                "text": "Ladies and gentlemen — this case comes down to three things. One: the IRB application was submitted after the dose was given — not before. Two: the consent form date was altered — changed from the day of treatment to the day before. Three: the dose was two and a half times the maximum safe starting dose — a dose that increased the risk of death tenfold. Dr. Blake says she was trying to save a life. But the rules exist to protect patients like Marcus Chen. The IRB process exists to ensure experimental treatments are safe. The dose limits exist for a reason. Dr. Blake bypassed every safeguard. Marcus Chen died as a result. That is not good medicine — that is criminal recklessness. The People ask you to return a verdict of Guilty.",
                 "phase": "Closing",
             },
             {
                 "agent": "Defense",
-                "text": "The prosecution has asked you to convict on suspicion. Let me remind you what the standard is: proof beyond a reasonable doubt. Not 'probably' — not 'likely' — beyond reasonable doubt. Where are the fingerprints? Where is the DNA? Where is the video? Their eyewitness is a convicted perjurer who was fired by my client for theft. Their cell tower data covers 1,200 feet — a truck stop, a gym, an industrial park. Their receipt was signed by 'E. Vance' — with no handwriting analysis. And their fire expert never examined the corroded wiring that our engineer says could have started the fire. Every piece of evidence has a gap. Gaps add up to reasonable doubt. You must find Emilia Vance Not Guilty.",
+                "text": "Dr. Sarah Blake is not a criminal. She is a doctor who spent 15 years treating the sickest patients. When Marcus Chen was dying, with no options left, she offered him hope. She discussed the risks. He consented. She used a dose within the range that an FDA advisory committee member considers acceptable. The paperwork — yes, it was imperfect. But paperwork errors are not manslaughter. The prosecution has not proven beyond reasonable doubt that Dr. Blake acted with criminal intent. If you have any doubt — any doubt at all — about whether Sarah Blake knowingly caused Marcus Chen's death, you must find her Not Guilty.",
                 "phase": "Closing",
             },
             # ════════════════ PHASE 8: JURY INSTRUCTIONS ════════════════
@@ -1373,7 +1688,7 @@ DEMO_CASES: dict[str, dict] = {
             },
             {
                 "agent": "Judge",
-                "text": "Ladies and gentlemen of the jury — I will now instruct you on the law that governs this case. Count One and Count Two charge the defendant with First-Degree Murder under California Penal Code 187(a). To find the defendant guilty, you must find that the prosecution has proven beyond a reasonable doubt: (1) the defendant committed an act that caused the death of another person, (2) the act was done with malice aforethought, and (3) the killing was willful, deliberate, and premeditated. Count Three charges Arson under Penal Code 451(b) — the willful and malicious burning of a structure. Your verdict must be unanimous. You must not be influenced by pity or prejudice. Consider all the evidence fairly.",
+                "text": "Members of the jury — Count One charges the defendant with Involuntary Manslaughter under 18 U.S.C. § 1112. To find the defendant guilty, the prosecution must prove beyond a reasonable doubt: (1) the defendant acted with criminal negligence — meaning a gross deviation from the standard of care that a reasonable person would observe in the same situation; (2) the defendant's actions caused the death of Marcus Chen; and (3) the defendant did not act with lawful authority or justification. Count Two charges Reckless Endangerment under New York Penal Law 120.25 — recklessly engaging in conduct that created a substantial risk of serious physical injury to another person. The defendant is presumed innocent. If you have a reasonable doubt, you must acquit.",
                 "phase": "Jury Instructions",
             },
             # ════════════════ PHASE 9: JURY DELIBERATION ════════════════
@@ -1384,84 +1699,69 @@ DEMO_CASES: dict[str, dict] = {
             },
             {
                 "agent": "Foreperson",
-                "text": "Let us begin deliberations. Please state your initial positions on the murder counts.",
+                "text": "Let us begin. Please state your initial positions on the manslaughter count.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #1 (Analytical): Guilty. The cell tower data plus the receipt plus the eyewitness — three independent lines of evidence all point to the same conclusion at the same time.",
+                "text": "Juror #1 (Analytical): Guilty. The consent form alteration is the key piece of evidence. If everything was above board, there would be no need to change the date. That shows consciousness of guilt.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #2 (Skeptical): Not Guilty. The eyewitness has a perjury conviction. That alone creates reasonable doubt for me. And the cell tower doesn't prove she was inside.",
+                "text": "Juror #2 (Empathetic): Not Guilty. I believe Dr. Blake was trying to help. The patient was dying. She gave him a chance. The paperwork was messy but her intent was not criminal.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #3 (Empathetic): Guilty. The expert testimony was clear. Three separate fires with accelerant. The wiring theory doesn't explain that. Someone set those fires.",
+                "text": "Juror #3 (Skeptical): Guilty. The dose was 2.5x the safe starting dose. The IRB was not informed. The consent form was altered. Even if she meant well, her actions were grossly negligent. Good intentions do not negate recklessness.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #4 (Pragmatic): Undecided. The evidence is circumstantial but it's a lot of circumstances aligning.",
+                "text": "Juror #4 (Pragmatic): Guilty. Three separate protocol violations — any one might be an error. Three together is a pattern. The ethical rules exist for a reason. She ignored them and a patient died.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Foreperson",
-                "text": "Round 1: 2 Guilty, 1 Not Guilty, 1 Undecided. Juror #2 — what would it take for you to reconsider?",
+                "text": "Round 1: 3 Guilty, 1 Not Guilty. Juror #2 — what would change your mind?",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Juror",
-                "text": "Juror #2: If the receipt were matched by handwriting analysis, I would be there. But the prosecution didn't do that. However... three separate fires. The expert is convincing on the arson count. I could find Guilty on Arson but still have doubt on Murder.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #4: The expert said it was human ignition. If we accept arson — and the defendant's phone was there, she had motive, the receipt... I'm moving to Guilty on all counts.",
+                "text": "Juror #2: I keep thinking about the patient's family. They said he wanted to try anything. But the dose issue — 2.5 times the safe dose — that is hard to explain. And the altered date... I cannot reconcile that with good intent. I change my vote to Guilty.",
                 "phase": "Jury Deliberation",
             },
             {
                 "agent": "Foreperson",
-                "text": "Round 2: 3 Guilty, 1 Not Guilty. Juror #2 — further thoughts?",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Juror",
-                "text": "Juror #2: I have struggled with Brennan's credibility. But I separate him from the physical evidence. The three fires — that's not a coincidence. The receipt. The phone. I change my vote to Guilty on all counts.",
-                "phase": "Jury Deliberation",
-            },
-            {
-                "agent": "Foreperson",
-                "text": "Round 3: 4 Guilty, 0 Not Guilty. Unanimous verdict reached on all three counts.",
+                "text": "Round 2: 4 Guilty, 0 Not Guilty. Unanimous verdict reached on Count One.",
                 "phase": "Jury Deliberation",
             },
             # ════════════════ PHASE 10: SHADOW JURY ════════════════
             {"agent": "Bailiff", "text": "The shadow jury has convened for analysis.", "phase": "Shadow Jury"},
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 1 (Liam): Accelerant expert testimony is compelling. Three separate fires by human ignition. Cell data places her at the scene. Receipt ties her to the materials. Prosecution's case is strong. [Vote: Guilty, confidence 82%]",
+                "text": "Shadow Juror 1 (Liam): The altered consent form is the most damning evidence. If the date was legitimate, why change it? That single act undermines the entire defense. [Vote: Guilty, confidence 85%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 2 (Sarah): Brennan's bias and perjury conviction damage the eyewitness portion. But the physical evidence stands independently. The expert was thorough. [Vote: Guilty, confidence 73%]",
+                "text": "Shadow Juror 2 (Sarah): The dose argument cuts both ways. Dr. Weiss made a reasonable case for clinical discretion. But the combination of no IRB approval + altered consent + excessive dosing creates a pattern of recklessness. [Vote: Guilty, confidence 72%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 3 (Marcus): Circumstantial — but the receipt is a paper trail you can't ignore. Gas cans purchased, then three gas fires. That's direct enough for me. [Vote: Guilty, confidence 78%]",
+                "text": "Shadow Juror 3 (Marcus): Dr. Blake's motive was to help — I accept that. But motive is not a defense. The rules exist for patient safety. She knowingly bypassed them. The result was foreseeable. [Vote: Guilty, confidence 78%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 4 (Elena): The defense's wiring theory has a problem — Dr. Sharma never inspected the scene. Dr. Chen did. Physical presence at the site matters. [Vote: Guilty, confidence 71%]",
+                "text": "Shadow Juror 4 (Elena): The prosecution proved that the consent form was altered. Dr. Blake's explanation — a pen with two ink cartridges — is not credible. If she lied about that, what else is she lying about? [Vote: Guilty, confidence 81%]",
                 "phase": "Shadow Jury",
             },
             {
                 "agent": "Juror",
-                "text": "Shadow Juror 5 (David): If the defendant really embezzled the $340,000, that's a powerful motive. Were bank records examined? Without that, I see circumstantial — but still enough. [Vote: Guilty, confidence 68%]",
+                "text": "Shadow Juror 5 (David): I struggle with this. She was trying to save a dying man. But the law requires following safety protocols, especially with experimental treatments. The deviation was too extreme. [Vote: Guilty, confidence 68%]",
                 "phase": "Shadow Jury",
             },
             {"agent": "Bailiff", "text": "The shadow jury has completed its analysis.", "phase": "Shadow Jury"},
@@ -1469,34 +1769,38 @@ DEMO_CASES: dict[str, dict] = {
             {"agent": "Bailiff", "text": "The court will now proceed to sentencing.", "phase": "Sentencing"},
             {
                 "agent": "Judge",
-                "text": "The jury has returned a verdict of Guilty on all counts. We now proceed to the sentencing phase. Mr. Mercer — the People may address the court on aggravation.",
+                "text": "The jury has returned a verdict of Guilty on Count One — Involuntary Manslaughter — and Count Two — Reckless Endangerment. We now proceed to sentencing. Mr. Mercer — the People may address the court on aggravation.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Prosecutor",
-                "text": "Your Honor, the People urge the maximum sentence. The defendant did not commit a crime of impulse — she planned this over days. She purchased gasoline containers. She waited for night shift. She poured accelerant at three locations to ensure maximum destruction. Two innocent people — Richard Torres, a father of three, and Dana Kim, a grandmother — were burned alive. Their smoke inhalation deaths mean they were conscious, coughing, suffocating, knowing they would die. The defendant set out to destroy evidence of embezzlement and did not care who she killed in the process. This is first-degree murder with malice aforethought, committed with premeditation and extreme cruelty. We request the court impose a sentence of life without the possibility of parole.",
-                "phase": "Sentencing",
-            },
-            {"agent": "Judge", "text": "Defense counsel — mitigation?", "phase": "Sentencing"},
-            {
-                "agent": "Defense",
-                "text": "Your Honor, Emilia Vance is 38 years old. She has no prior criminal record. She volunteered at a youth shelter for six years. She has a twelve-year-old daughter. The court should consider that this case was built entirely on circumstantial evidence — there is nothing direct tying her to this crime. A life sentence means her daughter grows up without a mother. We ask the court to impose the minimum sentence and to consider that the embezzlement allegation — the state's own theory of motive — was never charged or proven. The state is asking you to sentence her for an unproven crime.",
+                "text": "Your Honor, the People request a sentence of 8 to 12 years. Dr. Blake abused her position of trust as a physician. She conducted an unauthorized experiment on a vulnerable patient who had no reason to doubt that his doctor was following the rules. She altered the consent form — a deliberate act to conceal her deviation from protocol. The victim's mother testified at trial that she trusted Dr. Blake completely. That trust was betrayed. The sentence must reflect the gravity of a death caused by a physician's criminal negligence.",
                 "phase": "Sentencing",
             },
             {
                 "agent": "Judge",
-                "text": "The court has considered both aggravation and mitigation. Emilia Vance — please rise. The evidence at trial established beyond reasonable doubt that you set three separate fires in an occupied building, knowing two people were inside. You did so to destroy evidence of financial crimes. Richard Torres and Dana Kim died terrified, unable to escape a fire you set. Their families will carry that loss forever. However, this court also considers your lack of prior criminal history, your record of community service, and the needs of your daughter. The court hereby sentences you as follows: On Counts One and Two — First-Degree Murder — 25 years to life for each count, to be served concurrently. On Count Three — Arson — 8 years, concurrent. You are remanded to the custody of the California Department of Corrections. This court is adjourned.",
+                "text": "Defense counsel — mitigation?",
+                "phase": "Sentencing",
+            },
+            {
+                "agent": "Defense",
+                "text": "Your Honor, Dr. Blake has dedicated 15 years to treating the most difficult cancer cases. Hundreds of patients are alive because of her care. She has no prior criminal record. The evidence showed she spent 45 minutes discussing risks with Marcus Chen — she did not act with malice. She acted out of compassion for a dying man. She will lose her medical license as a result of these proceedings — that alone is a severe punishment. We ask the court to impose the minimum sentence of 3 years, with eligibility for probation, and to consider that her 12-year-old daughter will be without a mother if she is incarcerated.",
+                "phase": "Sentencing",
+            },
+            {
+                "agent": "Judge",
+                "text": "Dr. Sarah Blake — please rise. The evidence at trial established beyond reasonable doubt that you conducted an unauthorized clinical trial, administered a fatal dose of an experimental drug, and altered a consent form to conceal your actions. Marcus Chen trusted you, and you violated that trust. However, this court also considers your 15 years of service to critically ill patients, your lack of prior criminal history, and the extensive character testimony from your colleagues. The court hereby sentences you as follows: On Count One — Involuntary Manslaughter — 6 years of imprisonment. On Count Two — Reckless Endangerment — 3 years, to be served concurrently with Count One. You are remanded to the custody of the Federal Bureau of Prisons. Your medical license shall be referred to the New York State Medical Board for revocation proceedings. This court is adjourned.",
                 "phase": "Sentencing",
             },
             # ════════════════ PHASE 12: COURT REPORTER ════════════════
             {
                 "agent": "Bailiff",
-                "text": "Case 24-CF-0192 — State of California versus Emilia Vance — is concluded. The trial record shall be certified by the court reporter.",
+                "text": "Case 24-CR-0211 — State of New York versus Dr. Sarah Blake — is concluded. The trial record shall be certified by the court reporter.",
                 "phase": "Court Reporter Log",
             },
             {
                 "agent": "System",
-                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CF-0192. Verdict: Guilty on all counts. Sentence: 25 years to life, concurrent. Transcript includes 7 exhibits, 6 witnesses, 4 objections with rulings, 1 expert qualification, 2 impeachment challenges, 1 hearsay exception analysis, 3-round jury deliberation, 5 shadow juror analyses, and full sentencing hearing.]",
+                "text": "[Court Reporter Log: Complete trial record compiled. Case 24-CR-0211. Verdict: GUILTY on all counts. Sentence: 6 years imprisonment. Transcript includes 4 exhibits, 6 witnesses including 2 expert qualifications, 3 objections with rulings, 2 pre-trial motions, 4-phase adversarial process, 5 shadow juror analyses, full sentencing hearing.]",
                 "phase": "Court Reporter Log",
             },
             # ════════════════ ADJOURNED ════════════════
@@ -1507,33 +1811,33 @@ DEMO_CASES: dict[str, dict] = {
             },
         ],
         "verdict": "GUILTY",
-        "win_probability": 0.74,
-        "sensitivity": "If Brennan's testimony is excluded → prosecution win probability drops to 51%",
+        "win_probability": 0.71,
+        "sensitivity": "If consent forms were properly dated and signed before treatment → Defense win probability rises to 65%",
         "sentence": {
-            "sentence": "On Counts One and Two — First-Degree Murder — 25 years to life for each count, to be served concurrently. On Count Three — Arson — 8 years, concurrent.",
-            "term": "25 years to life, concurrent on all counts. Parole eligibility after 25 years.",
-            "rationale": "Aggravating factors: two victims, premeditation over multiple days, deliberate cruelty (smoke inhalation deaths while victims were conscious), arson used to conceal embezzlement. Mitigating factors: no prior criminal record, six years of community service at youth shelters, a 12-year-old dependent child.",
+            "sentence": "On Count One — Involuntary Manslaughter — 6 years imprisonment. On Count Two — Reckless Endangerment — 3 years, concurrent.",
+            "term": "6 years imprisonment. Eligibility for parole after serving 85% of sentence.",
+            "rationale": "Aggravating factors: abuse of physician trust, altered consent form, 2.5x maximum safe dose, death of patient. Mitigating factors: 15 years of patient care, no prior criminal record, patient's terminal condition and consent, character references from colleagues, impact on dependent child.",
         },
         "shadow_jury_narrative": [
             {
                 "name": "Shadow Juror 1",
-                "content": "Accelerant expert testimony is compelling. Three separate fires by human ignition. Cell data places her at the scene. Receipt ties her to the materials. Prosecution's case is strong. [Vote: Guilty, confidence 82%]",
+                "content": "The altered consent form is the most damning evidence. If the date was legitimate, why change it? That single act undermines the entire defense. [Vote: Guilty]",
             },
             {
                 "name": "Shadow Juror 2",
-                "content": "Brennan's bias and perjury conviction damage the eyewitness portion. But the physical evidence stands independently. The expert was thorough. [Vote: Guilty, confidence 73%]",
+                "content": "The dose argument cuts both ways. But the combination of no IRB approval + altered consent + excessive dosing creates a pattern of recklessness. [Vote: Guilty]",
             },
             {
                 "name": "Shadow Juror 3",
-                "content": "Circumstantial — but the receipt is a paper trail you can't ignore. Gas cans purchased, then three gas fires. That's direct enough for me. [Vote: Guilty, confidence 78%]",
+                "content": "Dr. Blake's motive was to help — I accept that. But motive is not a defense. The rules exist for patient safety. She knowingly bypassed them. [Vote: Guilty]",
             },
             {
                 "name": "Shadow Juror 4",
-                "content": "The defense's wiring theory has a problem — Dr. Sharma never inspected the scene. Dr. Chen did. Physical presence at the site matters. [Vote: Guilty, confidence 71%]",
+                "content": "The prosecution proved the consent form was altered. Dr. Blake's explanation — a pen with two ink cartridges — is not credible. [Vote: Guilty]",
             },
             {
                 "name": "Shadow Juror 5",
-                "content": "If the defendant really embezzled the $340,000, that's a powerful motive. Were bank records examined? Without that, I see circumstantial — but still enough. [Vote: Guilty, confidence 68%]",
+                "content": "She was trying to save a dying man. But the law requires following safety protocols for experimental treatments. The deviation was too extreme. [Vote: Guilty]",
             },
         ],
     },

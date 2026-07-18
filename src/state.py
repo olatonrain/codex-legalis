@@ -65,6 +65,7 @@ def create_initial_state(
         "cross_examination": cross_examination,
         "court_address": court_address,
         "case_type": case_type,
+    "multimodal_evidence": [],  # list of base64 data URIs (uploaded evidence images)
     }
     state.update(overrides)
     return state
@@ -130,6 +131,9 @@ class TrialState(TypedDict):
     main_verdict: Optional[str]
     shadow_jury_results: Dict[str, Any]
     sentence: Optional[str]  # Judge's sentence after Guilty/Liable verdict
+
+    # ── Image Evidence ────────────────────────────────────────────
+    multimodal_evidence: List[str]  # base64 data URIs of uploaded evidence images
 
     # ── Error Handling ────────────────────────────────────────────
     errors: List[str]

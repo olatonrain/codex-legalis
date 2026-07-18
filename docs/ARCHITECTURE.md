@@ -2,7 +2,6 @@
 
 This document describes the system architecture, tech stack, directory layout, frontend modules, backend APIs, agent society roles, and the data flow of Codex legalist.
 
-
 ## Table of Contents
 
 1. [System Overview](#system-overview)
@@ -89,15 +88,15 @@ flowchart TD
 
 ## Tech Stack
 
-| Layer         | Technology             | Purpose                                        |
-| ------------- | ---------------------- | ---------------------------------------------- |
-| LLM           | Qwen Cloud (DashScope) | All generative and reasoning tasks             |
-| Audio         | Qwen Omni / Qwen Audio | Speech-to-text transcription, TTS              |
-| Orchestration | LangGraph (Python)     | 18-node state machine with conditional routing |
-| Backend       | FastAPI + Uvicorn      | HTTP API server                                |
-| Frontend      | Vanilla HTML/CSS/JS    | ES module single-page application              |
-| File Parsing  | pypdf, python-docx     | PDF and DOCX extraction                        |
-| Charts        | Plotly.js              | Verdict gauge, evidence visualisation          |
+| Layer         | Technology                 | Purpose                                         |
+| ------------- | -------------------------- | ----------------------------------------------- |
+| LLM           | Qwen Cloud (DashScope)     | All generative and reasoning tasks              |
+| Audio         | Qwen Omni / Qwen Audio     | Speech-to-text transcription, TTS               |
+| Orchestration | LangGraph (Python)         | 18-node state machine with conditional routing  |
+| Backend       | FastAPI + Uvicorn          | HTTP API server                                 |
+| Frontend      | Vanilla HTML/CSS/JS        | ES module single-page application               |
+| File Parsing  | pypdf, python-docx         | PDF and DOCX extraction                         |
+| Charts        | Plotly.js                  | Verdict gauge, evidence visualisation           |
 | Deploy        | Alibaba Cloud ECS / Docker | Production hosting (automated container runner) |
 
 ---
@@ -165,26 +164,26 @@ The frontend is a **vanilla JS single-page application** organised as 6 ES modul
 
 ### Module Responsibilities
 
-| Module          | Lines | Responsibility                                          |
-| --------------- | ----- | ------------------------------------------------------- |
+| Module          | Lines | Responsibility                                                                                                                  |
+| --------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `app.js`        | ~60   | Entry point — imports all modules, registers `DOMContentLoaded` bootstrap, exposes globals (`window.State`, `window.showToast`) |
-| `state.js`      | ~255  | `State` object, `$()` shorthand, constants, theme toggle IIFE, jurisdiction data |
-| `ui.js`         | ~2335 | All UI — navigation, view switching, benchmark runner, trial controls, file upload, chart rendering, toast notifications |
-| `jury.js`       | ~685  | Jury grid, verdict charts, deliberation view, shadow jury conversation, **counsel insights** |
-| `transcript.js` | ~175  | Transcript message rendering, streaming append |
-| `evidence.js`   | ~150  | Evidence list, exhibit display, admit/exclude toggles |
+| `state.js`      | ~255  | `State` object, `$()` shorthand, constants, theme toggle IIFE, jurisdiction data                                                |
+| `ui.js`         | ~2335 | All UI — navigation, view switching, benchmark runner, trial controls, file upload, chart rendering, toast notifications        |
+| `jury.js`       | ~685  | Jury grid, verdict charts, deliberation view, shadow jury conversation, **counsel insights**                                    |
+| `transcript.js` | ~175  | Transcript message rendering, streaming append                                                                                  |
+| `evidence.js`   | ~150  | Evidence list, exhibit display, admit/exclude toggles                                                                           |
 
 ### View System
 
 The app switches between views by toggling `.active` class on `#view-*` divs in `index.html`:
 
-| View ID             | Content                                                        |
-| ------------------- | -------------------------------------------------------------- |
-| `view-setup`        | Case facts input, jurisdiction selector, demo buttons           |
-| `view-trial`        | Live trial transcript, sidebar, metrics                        |
+| View ID             | Content                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `view-setup`        | Case facts input, jurisdiction selector, demo buttons                                        |
+| `view-trial`        | Live trial transcript, sidebar, metrics                                                      |
 | `view-verdict`      | Verdict card → jury vote breakdown → Counsel Insights → shadow jury → sentencing → analytics |
-| `view-deliberation` | Full deliberation transcript + consensus rows                  |
-| `view-benchmark`    | Benchmark runner + results table, charts, sample responses     |
+| `view-deliberation` | Full deliberation transcript + consensus rows                                                |
+| `view-benchmark`    | Benchmark runner + results table, charts, sample responses                                   |
 
 ### State Management
 
@@ -235,23 +234,23 @@ State.shadowJuries      — Number of shadow juries configured
 
 Query parameters:
 
-| Param           | Type    | Description                               |
-| --------------- | ------- | ----------------------------------------- |
-| `case_description` | string | Case facts text                         |
-| `num_runs`      | int     | Number of runs per approach (default 3)   |
-| `use_mock`      | bool    | Use mock responses (no API calls)         |
-| `trial_context` | string  | JSON-encoded `State.graphState` (optional)|
+| Param              | Type   | Description                                |
+| ------------------ | ------ | ------------------------------------------ |
+| `case_description` | string | Case facts text                            |
+| `num_runs`         | int    | Number of runs per approach (default 3)    |
+| `use_mock`         | bool   | Use mock responses (no API calls)          |
+| `trial_context`    | string | JSON-encoded `State.graphState` (optional) |
 
 Events emitted:
 
-| Event            | Payload                              | When                          |
-| ---------------- | ------------------------------------ | ----------------------------- |
-| `raw_llm_start`  | `{ run, total }`                     | Raw LLM query started         |
-| `raw_llm_done`   | `{ response, hallucinations, time }` | Raw LLM query completed       |
-| `single_start`   | `{ run }`                            | Single-agent trial started    |
-| `single_done`    | `{ verdict, reasoning, time }`       | Single-agent trial completed  |
-| `multi_result`   | `{ verdict, source, ... }`           | Multi-agent result ready      |
-| `complete`       | Full aggregate object                | All runs finished              |
+| Event           | Payload                              | When                         |
+| --------------- | ------------------------------------ | ---------------------------- |
+| `raw_llm_start` | `{ run, total }`                     | Raw LLM query started        |
+| `raw_llm_done`  | `{ response, hallucinations, time }` | Raw LLM query completed      |
+| `single_start`  | `{ run }`                            | Single-agent trial started   |
+| `single_done`   | `{ verdict, reasoning, time }`       | Single-agent trial completed |
+| `multi_result`  | `{ verdict, source, ... }`           | Multi-agent result ready     |
+| `complete`      | Full aggregate object                | All runs finished            |
 
 When `trial_context` is provided, the multi-agent result source is `"existing_trial"` (metrics extracted from saved state — no graph re-run).
 
@@ -304,16 +303,16 @@ The benchmark compares three approaches on identical case facts:
 
 ### Approaches
 
-| Approach       | What it does                                                                    | When trial_context given                          |
-| -------------- | ------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **Raw LLM**    | Single prompt to Qwen: "What's the verdict?"                                    | Prompt enriched with full trial record            |
-| **Single-Agent** | One LLM handles all roles (prosecutor, defence, judge, jury)                  | Same enrichment                                   |
-| **Multi-Agent**  | Full 11-agent LangGraph society + shadow juries                              | **Skips re-run** — metrics extracted from saved trial |
+| Approach         | What it does                                                 | When trial_context given                              |
+| ---------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| **Raw LLM**      | Single prompt to Qwen: "What's the verdict?"                 | Prompt enriched with full trial record                |
+| **Single-Agent** | One LLM handles all roles (prosecutor, defence, judge, jury) | Same enrichment                                       |
+| **Multi-Agent**  | Full 11-agent LangGraph society + shadow juries              | **Skips re-run** — metrics extracted from saved trial |
 
 ### Metrics
 
-| Metric                | What it measures                                    |
-| --------------------- | --------------------------------------------------- |
+| Metric                | What it measures                                     |
+| --------------------- | ---------------------------------------------------- |
 | Evidence Citations    | Count of terms like "exhibit", "witness", "evidence" |
 | Hallucinations        | Facts in response not present in case description    |
 | Verdict Consistency   | Agreement rate across multiple runs                  |
@@ -340,22 +339,22 @@ Post-trial strategic analysis generated from the completed trial record.
 1. User clicks **"Generate Insights"** in the verdict view (positioned right after the Jury Vote Breakdown)
 2. Frontend sends `State.graphState` to `POST /api/trial/insight`
 3. Backend (`src/insight.py`) extracts a truncated trial context:
-   - Case description (first 3000 chars)
-   - Admitted evidence (last 10 items)
-   - Excluded evidence (last 5 items)
-   - Closing arguments (first 2000 chars)
-   - Deliberation rationale (first 1000 chars)
-   - Verdict
+    - Case description (first 3000 chars)
+    - Admitted evidence (last 10 items)
+    - Excluded evidence (last 5 items)
+    - Closing arguments (first 2000 chars)
+    - Deliberation rationale (first 1000 chars)
+    - Verdict
 4. Three parallel LLM calls (one per perspective) generate structured advice
 5. Results are cached by `sha256(case_facts + evidence + verdict + perspective)`
 
 ### Perspectives
 
-| Perspective    | Prompt source                        | Model                           |
-| -------------- | ------------------------------------ | ------------------------------- |
-| Defence Counsel | `prompts.defense_counsel_insight_prompt` | `AGENT_MODELS["Jury Foreperson"]` |
-| Prosecution    | `prompts.prosecution_counsel_insight_prompt` | same                            |
-| Judge          | `prompts.judge_counsel_insight_prompt`   | same                            |
+| Perspective     | Prompt source                                | Model                             |
+| --------------- | -------------------------------------------- | --------------------------------- |
+| Defence Counsel | `prompts.defense_counsel_insight_prompt`     | `AGENT_MODELS["Jury Foreperson"]` |
+| Prosecution     | `prompts.prosecution_counsel_insight_prompt` | same                              |
+| Judge           | `prompts.judge_counsel_insight_prompt`       | same                              |
 
 Each result returns: `summary`, `key_strengths`, `key_weaknesses`, `recommendations`.
 
@@ -374,6 +373,7 @@ The simulation adapts procedure, evidence rules, and legal standards to the sele
 - **Mixed:** South Africa (Common Law + Roman-Dutch), Saudi Arabia (Islamic Law + Royal Decrees), China (Socialist Legal System)
 
 Each jurisdiction specifies:
+
 - **Procedure type** — Adversarial vs Inquisitorial
 - **Standards of proof** — Criminal: "beyond a reasonable doubt", Civil: "preponderance of the evidence" or "balance of probabilities"
 - **Evidence rules** — e.g., Federal Rules of Evidence, UK PACE, Nigerian Evidence Act
@@ -417,9 +417,3 @@ User clicks "Generate Insights" in verdict view
   → Results cached → returned to frontend
   → Frontend renders expandable insight cards for each perspective
 ```
-
----
-
-### Duplicate Note
-
-A copy of this file exists at `docs/ARCHITECTURE.md`. The root `ARCHITECTURE.md` is canonical. Update both when making changes.

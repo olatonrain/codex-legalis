@@ -155,7 +155,7 @@ def get_jurisdictions():
 
 
 class DemoRequest(BaseModel):
-    demo_key: str  # "theft" | "contract"
+    demo_key: str  # "ransomware" | "spill" | "clinical"
     shadow_juries: int = 20
 
 

@@ -11,6 +11,7 @@ AGENT_MODELS = {
     "Clerk": "qwen-flash",
     "Archivist": "qwen-turbo-latest",
     "Jury Foreperson": "qwen-plus-latest",
+    "Evidence": "qwen-omni-turbo",  # multimodal (text + images)
 }
 
 # ── Jurisdiction Registry ────────────────────────────────────────

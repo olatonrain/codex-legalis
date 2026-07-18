@@ -1200,9 +1200,9 @@ async function launchLiveTrial(skip) {
 // ── Demo case streaming ───────────────────────────────────────────────────────
 
 function initDemoButtons() {
-  $("demoTheft")    ?.addEventListener("click", () => loadDemo("theft"));
-  $("demoContract") ?.addEventListener("click", () => loadDemo("contract"));
-  $("demoVance")    ?.addEventListener("click", () => loadDemo("vance"));
+  $("demoRansomware")?.addEventListener("click", () => loadDemo("ransomware"));
+  $("demoSpill")     ?.addEventListener("click", () => loadDemo("spill"));
+  $("demoClinical")  ?.addEventListener("click", () => loadDemo("clinical"));
 }
 
 // ── Benchmark ─────────────────────────────────────────────────────────────────
@@ -1352,13 +1352,13 @@ async function runBenchmark(useMock) {
 }
 
 async function loadDemo(key) {
-  clearTranscript();
   State.trialMode    = "demo";
   State.demoRunning  = false;
   State.livePaused   = false;
   clearTimeout(State.demoTimer);
 
   try {
+    clearTranscript();
     const res  = await fetch("/api/demo", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
@@ -1387,7 +1387,7 @@ async function loadDemo(key) {
     // Mock the graphState for the Demo so the Deliberation UI renders correctly
     State.graphState = {
       jury_enabled: true,
-      case_type: key === "contract" ? "Civil" : "Criminal",
+      case_type: key === "spill" ? "Civil" : "Criminal",
       jury_profiles: Array.from({ length: 12 }).map((_, i) => ({
         juror_id: i + 1,
         name: `Juror ${i + 1}`,

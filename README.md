@@ -67,15 +67,14 @@ Open [http://localhost:8000](http://localhost:8000).
 
 ## Documentation <!-- agent-updated -->
 
-| Document                     | Description                                                |
-| ---------------------------- | ---------------------------------------------------------- |
-| [Architecture](docs/ARCHITECTURE.md) | System diagram, tech stack, agent roles, trial phases      |
-| [Usage & API Guide](docs/USAGE.md)   | How to run trials, demo cases, file upload, API reference  |
-| [Benchmark System](docs/BENCHMARK.md) | Raw LLM vs Single-Agent vs Codex legalist comparison      |
-| [Alibaba Cloud Deployment](docs/DEPLOYMENT.md) | Deployment process, environment config, DashScope setup |
-| [Safety Guidelines](docs/SAFETY.md)  | Data limits, Fact Checker, prompt injection defense        |
-| [Security Policy](SECURITY.md)       | Vulnerability reporting, secrets handling, rate limits     |
-
+| Document                                       | Description                                               |
+| ---------------------------------------------- | --------------------------------------------------------- |
+| [Architecture](docs/ARCHITECTURE.md)           | System diagram, tech stack, agent roles, trial phases     |
+| [Usage & API Guide](docs/USAGE.md)             | How to run trials, demo cases, file upload, API reference |
+| [Benchmark System](docs/BENCHMARK.md)          | Raw LLM vs Single-Agent vs Codex legalist comparison      |
+| [Alibaba Cloud Deployment](docs/DEPLOYMENT.md) | Deployment process, environment config, DashScope setup   |
+| [Safety Guidelines](docs/SAFETY.md)            | Data limits, Fact Checker, prompt injection defense       |
+| [Security Policy](SECURITY.md)                 | Vulnerability reporting, secrets handling, rate limits    |
 
 ---
 
@@ -88,5 +87,3 @@ Ready-to-upload case files for testing. See [sample_cases/](sample_cases/) for a
 ## License
 
 MIT — anyone may use, modify, and distribute this software for any purpose, commercial or private. Attribution is required. The software is provided without warranty. See [LICENSE](LICENSE) for the full terms.
-
-MIT was chosen because it is permissive for open-source adoption, satisfies the hackathon's open-source licensing requirement, and places no restrictions on downstream use.

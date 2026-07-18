@@ -21,6 +21,19 @@ logger = get_logger(__name__)
 _no_objection_lock = threading.Lock()
 _no_objection_counter: dict[str, int] = {}
 
+
+def _human_msg_with_images(text: str, image_uris: list[str]) -> list:
+    """Build a HumanMessage content list, appending image_url blocks if image_uris is non-empty.
+
+    When no images are present, returns a plain string for backward-compatible message construction.
+    """
+    if not image_uris:
+        return text
+    content: list = [{"type": "text", "text": text}]
+    for uri in image_uris:
+        content.append({"type": "image_url", "image_url": {"url": uri}})
+    return content
+
 _OBJECTION_TYPE_NAMES = {
     "hearsay": "Hearsay",
     "relevance": "Relevance",
@@ -88,7 +101,8 @@ def _argue_hearsay_exception(llm, prompt_func, jx: dict, objection: ObjectionOut
 
 
 def _judge_rule_on_objection(
-    judge_llm, jx: dict, evidence: str, objection: ObjectionOutput, exception_arg: str = ""
+    judge_llm, jx: dict, evidence: str, objection: ObjectionOutput, exception_arg: str = "",
+    image_uris: list[str] | None = None,
 ) -> JudgeRuling:
     """Judge rules on a structured objection, optionally considering a hearsay exception argument."""
     exception_block = f"\nThe offering party argues the following exception: {exception_arg}" if exception_arg else ""
@@ -96,7 +110,7 @@ def _judge_rule_on_objection(
         [
             SystemMessage(content=p.judge_prompt(jx)),
             HumanMessage(
-                content=(
+                content=_human_msg_with_images(
                     f"Evidence: {evidence}\n\n"
                     f"Objection — Type: {_OBJECTION_TYPE_NAMES.get(objection.objection_type, objection.objection_type)}\n"
                     f"Rule cited: {objection.rule_cited}\n"
@@ -105,7 +119,8 @@ def _judge_rule_on_objection(
                     f"exception was argued, OVERRULE."
                     f"If the evidence is admissible for one purpose but not another (e.g. not for the truth of the matter but for showing notice or state of mind), "
                     f"rule 'SUSTAINED IN PART' and provide a limiting_instruction specifying exactly what use is permissible."
-                    f"Return a JSON object with ruling, rationale, objection_type, and limiting_instruction (empty string if not needed)."
+                    f"Return a JSON object with ruling, rationale, objection_type, and limiting_instruction (empty string if not needed).",
+                    image_uris or [],
                 )
             ),
         ]
@@ -122,25 +137,28 @@ def evidence_node(state: TrialState) -> dict:
     logger.info("--- EVIDENCE PRESENTATION ---")
     jx = _get_jx(state)
     facts = state.get("case_description", "")
+    image_uris = state.get("multimodal_evidence", [])
+    has_images = bool(image_uris)
     transcript = []
     objection_log = list(state.get("objection_history", []))
     if not _has_actionable_case_facts(facts):
         return _insufficient_record_evidence(jx)
 
-    pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
-    def_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
+    pros_model = AGENT_MODELS["Evidence"] if has_images else AGENT_MODELS["Prosecutor"]
+    def_model = AGENT_MODELS["Evidence"] if has_images else AGENT_MODELS["Defense Counsel"]
+    pros_llm = get_llm(temperature=0.6, model=pros_model)
+    def_llm = get_llm(temperature=0.6, model=def_model)
     judge_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
     def_decision_llm = get_structured_llm(
-        EvidenceObjectionDecision, temperature=0.3, model=AGENT_MODELS["Defense Counsel"]
+        EvidenceObjectionDecision, temperature=0.3, model=def_model
     )
-    pros_decision_llm = get_structured_llm(EvidenceObjectionDecision, temperature=0.3, model=AGENT_MODELS["Prosecutor"])
-
+    pros_decision_llm = get_structured_llm(EvidenceObjectionDecision, temperature=0.3, model=pros_model)
     # ── Round 1: Prosecution presents, Defence OPTIONALLY objects ─────────────
     pros_ev = pros_llm.invoke(
         [
             SystemMessage(content=p.prosecutor_prompt(jx)),
             HumanMessage(
-                content=(
+                content=_human_msg_with_images(
                     f"Present ONE piece of evidence in 40 words or fewer.\n"
                     f"For EACH exhibit you MUST include AUTHENTICATION: name the exhibit by its letter, "
                     f"state who created/received/maintained it, how it was obtained, and whether it is a "
@@ -148,7 +166,8 @@ def evidence_node(state: TrialState) -> dict:
                     f"Example: 'The prosecution tenders Exhibit D, an internal email from X to Y dated Z, "
                     f"obtained from the company server and identified by the IT custodian. It is a business record.'\n"
                     f"Ground every detail in the case facts. Do NOT invent dates or names not in the facts.\n"
-                    f"Case facts:\n{facts}"
+                    f"Case facts:\n{facts}",
+                    image_uris,
                 )
             ),
         ]
@@ -161,13 +180,14 @@ def evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.defense_objection_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f'The prosecution has presented this evidence:\n"{pros_ev.content}"\n\n'
                         f"Case facts:\n{facts}\n\n"
                         f"Does this evidence have a GENUINE, CLEAR admissibility defect under {jx['evidence_rules']}? "
                         f"If yes, set should_object=true and specify the defect. "
                         f"If the evidence appears admissible (even if unfavourable), set should_object=false. "
-                        f"Return a JSON object with: should_object, objection_type, rule_cited, rationale."
+                        f"Return a JSON object with: should_object, objection_type, rule_cited, rationale.",
+                        image_uris,
                     )
                 ),
             ]
@@ -204,6 +224,7 @@ def evidence_node(state: TrialState) -> dict:
             pros_ev.content,
             obj_for_ruling,
             exception_arg if def_decision.objection_type == "hearsay" else "",
+            image_uris=image_uris,
         )
         objection_log.append(
             {
@@ -239,13 +260,14 @@ def evidence_node(state: TrialState) -> dict:
         [
             SystemMessage(content=p.defense_prompt(jx)),
             HumanMessage(
-                content=(
+                content=_human_msg_with_images(
                     f"Present ONE piece of evidence for the defence in 40 words or fewer.\n"
                     f"For EACH exhibit you MUST include AUTHENTICATION: name the exhibit by its letter, "
                     f"state who created/received/maintained it, how it was obtained, and whether it is a "
                     f"business record, direct observation, or other admissible form.\n"
                     f"Ground every detail in the case facts. Do NOT invent details.\n"
-                    f"Case facts:\n{facts}"
+                    f"Case facts:\n{facts}",
+                    image_uris,
                 )
             ),
         ]
@@ -258,13 +280,14 @@ def evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.prosecution_objection_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f'The defence has presented this evidence:\n"{def_ev.content}"\n\n'
                         f"Case facts:\n{facts}\n\n"
                         f"Does this evidence have a GENUINE, CLEAR admissibility defect under {jx['evidence_rules']}? "
                         f"If yes, set should_object=true and specify the defect. "
                         f"If the evidence appears admissible (even if unfavourable), set should_object=false. "
-                        f"Return a JSON object with: should_object, objection_type, rule_cited, rationale."
+                        f"Return a JSON object with: should_object, objection_type, rule_cited, rationale.",
+                        image_uris,
                     )
                 ),
             ]
@@ -301,6 +324,7 @@ def evidence_node(state: TrialState) -> dict:
             def_ev.content,
             obj_for_ruling2,
             exception_arg2 if pros_decision.objection_type == "hearsay" else "",
+            image_uris=image_uris,
         )
         objection_log.append(
             {
@@ -341,13 +365,17 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
     logger.info("--- REBUTTAL EVIDENCE ---")
     jx = _get_jx(state)
     facts = state.get("case_description", "")
+    image_uris = state.get("multimodal_evidence", [])
+    has_images = bool(image_uris)
     transcript = []
     if not _has_actionable_case_facts(facts):
         return _insufficient_record_evidence(jx)
 
     try:
-        pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
-        def_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Defense Counsel"])
+        pros_model = AGENT_MODELS["Evidence"] if has_images else AGENT_MODELS["Prosecutor"]
+        def_model = AGENT_MODELS["Evidence"] if has_images else AGENT_MODELS["Defense Counsel"]
+        pros_llm = get_llm(temperature=0.6, model=pros_model)
+        def_llm = get_llm(temperature=0.6, model=def_model)
         judge_llm = get_structured_llm(JudgeRuling, temperature=0.1, model=AGENT_MODELS["Judge"])
     except Exception as e:
         logger.error("Rebuttal LLM init error: %s", e, exc_info=True)
@@ -359,9 +387,10 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.prosecutor_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f"Present ONE rebuttal exhibit in 40 words or fewer. Name it and state why it rebuts "
-                        f"the defence's case. Ground it in the case facts.\nCase facts:\n{facts}"
+                        f"the defence's case. Ground it in the case facts.\nCase facts:\n{facts}",
+                        image_uris,
                     )
                 ),
             ]
@@ -372,9 +401,10 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.defense_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f'Prosecution rebuttal:\n"{pros_rebut.content}"\n\n'
-                        f"Object in 30 words or fewer. Cite the specific rule from {jx['evidence_rules']}."
+                        f"Object in 30 words or fewer. Cite the specific rule from {jx['evidence_rules']}.",
+                        image_uris,
                     )
                 ),
             ]
@@ -385,12 +415,13 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.judge_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f"Prosecution rebuttal: {pros_rebut.content}\n"
                         f"Defence objects: {def_obj.content}\n\n"
                         f"Rule on the objection under {jx['evidence_rules']}.\n"
                         f"Return JSON with two keys: \"ruling\" (either 'SUSTAINED' or 'OVERRULED') "
-                        f'and "rationale" (your legal basis citing the specific rule).'
+                        f'and "rationale" (your legal basis citing the specific rule).',
+                        image_uris,
                     )
                 ),
             ]
@@ -405,9 +436,10 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.defense_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f"Present ONE surrebuttal exhibit in 40 words or fewer. Name it and state why it "
-                        f"responds to the prosecution's rebuttal. Ground it in the case facts.\nCase facts:\n{facts}"
+                        f"responds to the prosecution's rebuttal. Ground it in the case facts.\nCase facts:\n{facts}",
+                        image_uris,
                     )
                 ),
             ]
@@ -418,9 +450,10 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.prosecutor_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f'Defence surrebuttal:\n"{def_sur.content}"\n\n'
-                        f"Object in 30 words or fewer. Cite the specific rule from {jx['evidence_rules']}."
+                        f"Object in 30 words or fewer. Cite the specific rule from {jx['evidence_rules']}.",
+                        image_uris,
                     )
                 ),
             ]
@@ -431,12 +464,13 @@ def rebuttal_evidence_node(state: TrialState) -> dict:
             [
                 SystemMessage(content=p.judge_prompt(jx)),
                 HumanMessage(
-                    content=(
+                    content=_human_msg_with_images(
                         f"Defence surrebuttal: {def_sur.content}\n"
                         f"Prosecution objects: {pros_obj.content}\n\n"
                         f"Rule on the objection under {jx['evidence_rules']}.\n"
                         f"Return JSON with two keys: \"ruling\" (either 'SUSTAINED' or 'OVERRULED') "
-                        f'and "rationale" (your legal basis citing the specific rule).'
+                        f'and "rationale" (your legal basis citing the specific rule).',
+                        image_uris,
                     )
                 ),
             ]
