@@ -1,7 +1,7 @@
 "use strict";
 // ── JURY module — extracted from static/app.js ──
 
-import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, getAgentAbbr, getAgentColor, getAgentAvClass, JX_DATA, safeJson, toggleTheme } from './state.js';
+import { State, $, showToast, escapeHtml, formatDuration, classifyStance, getAgentColor } from './state.js';
 import { addTranscriptEntry } from './transcript.js';
 
 

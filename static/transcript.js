@@ -1,7 +1,7 @@
 "use strict";
 // ── TRANSCRIPT module — extracted from static/app.js ──
 
-import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, getAgentAbbr, getAgentColor, getAgentAvClass, JX_DATA, safeJson, toggleTheme } from './state.js';
+import { State, $, escapeHtml, sleep, extractExhibitLabel, getAgentAbbr, getAgentColor, getAgentAvClass } from './state.js';
 import { renderEvidenceBoard, renderObjectionHistory } from './evidence.js';
 import { renderAgentRoster, updateMetricsDisplay } from './ui.js';
 
@@ -16,7 +16,7 @@ function importTranscriptFromGraphState(transcriptList) {
   for (const msg of transcriptList) {
     const content = typeof msg.content === "string" ? msg.content : String(msg.content || "");
     const agent = msg.name || msg.agent || "System";
-    addTranscriptMessage(agent, content, "");
+    addTranscriptEntry(agent, content, "");
   }
 }
 

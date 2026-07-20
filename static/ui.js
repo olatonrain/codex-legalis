@@ -1,35 +1,13 @@
 "use strict";
 // ── UI module — extracted from static/app.js ──
 
-import { State, $, $$, showToast, escapeHtml, sleep, formatDuration, classifyStance, extractExhibitLabel, isTrialConcluded, getAgentAbbr, getAgentColor, getAgentAvClass, JX_DATA, safeJson, toggleTheme } from './state.js';
+import { State, $, $$, showToast, escapeHtml, sleep, classifyStance, isTrialConcluded, getAgentAbbr, getAgentColor, JX_DATA, safeJson, toggleTheme } from './state.js';
 import { clearTranscript, addTranscriptEntry, addSystemMessage, streamLines, importTranscriptFromGraphState, handleEvidenceFromEntry, syncEvidenceFromState, exportTranscript } from './transcript.js';
 import { renderEvidenceBoard, renderObjectionHistory, renderClerkSummary, renderMotionRulings, renderDiscoverySummary } from './evidence.js';
 import { buildLiveDeliberationSnapshot, renderShadowJuryConversation, renderVerdictView, renderVerdictCharts, renderJuryGrid, renderDeliberationView, renderConsensusRows, renderDeliberationTranscript, renderCaseRecordSummary, renderMiniChart, requestInsights, renderInsightResults, initInsightButtons, toggleInsightExpand } from './jury.js';
 
-"use strict";
-
 // ── State ────────────────────────────────────────────────────────────────────
 
-
-document.addEventListener("DOMContentLoaded", () => {
-  initTabs();
-  initBottomTimeline();
-  initDrawers();
-  initSpeedSlider();
-  initSetupForm();
-  initCaseTabs();
-  initDemoButtons();
-  initNavActions();
-  initBenchmarkButtons();
-  loadJurisdictions();
-  renderMiniChart();
-  renderJuryGrid();
-  renderDeliberationView();
-  updateExportControls();
-  checkApiHealth();
-  renderCaseDocket();
-  switchView("dashboard");
-});
 
 async function checkApiHealth() {
   try {
@@ -2290,12 +2268,6 @@ function clearCaseDocket() {
 }
 
 // ── Dark Mode Toggle ──────────────────────────────────────────────────────────
-
-
-document.addEventListener("DOMContentLoaded", function() {
-  const themeBtn = document.getElementById("themeToggle");
-  if (themeBtn) themeBtn.addEventListener("click", toggleTheme);
-});
 
 
 export {

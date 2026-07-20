@@ -2,20 +2,7 @@
 // ── Entry point — imports all modules and exposes globals ──
 
 import { State, showToast, escapeHtml, toggleTheme } from './state.js';
-import {
-    clearTranscript, addTranscriptEntry, addSystemMessage,
-    streamLines, importTranscriptFromGraphState, handleEvidenceFromEntry,
-    syncEvidenceFromState, exportTranscript,
-} from './transcript.js';
-import { renderEvidenceBoard, renderObjectionHistory, renderClerkSummary,
-    renderMotionRulings, renderDiscoverySummary } from './evidence.js';
-import {
-    buildLiveDeliberationSnapshot, renderShadowJuryConversation,
-    renderVerdictView, renderVerdictCharts, renderJuryGrid,
-    renderDeliberationView, renderConsensusRows, renderDeliberationTranscript,
-    renderCaseRecordSummary, renderMiniChart, renderInsightResults,
-    requestInsights, toggleInsightExpand, initInsightButtons,
-} from './jury.js';
+import { renderMiniChart, renderJuryGrid, renderDeliberationView, toggleInsightExpand, initInsightButtons } from './jury.js';
 import * as UI from './ui.js';
 
 // ── Expose globals for inline onclick= handlers in innerHTML ──
@@ -57,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     UI.initCaseTabs();
     UI.initDemoButtons();
     UI.initNavActions();
+    UI.initBenchmarkButtons();
 
     initInsightButtons();
     UI.loadJurisdictions();
