@@ -419,38 +419,61 @@ def _is_deceased_witness(witness_name: str, case_description: str) -> bool:
     """Check if the witness is described as deceased/killed/victim in the case facts."""
     if not witness_name or not case_description:
         return False
-    name_parts = witness_name.lower().split()
+    name_lower = witness_name.lower()
     desc_lower = case_description.lower()
     death_patterns = [
         r"(?:was\s+)?killed",
         r"(?:was\s+)?died",
+        r"passed\s+away",
+        r"was\s+fatally",
+        r"lost\s+(?:his|her|their)\s+life",
+        r"body\s+(?:\w+\s+){0,5}found",
         r"deceased",
         r"fatality",
         r"fatalit",
         r"(?:is\s+)?dead",
         r"murdered",
-        r"victim",
+        r"murder",
+        r"homicide\s+victim",
+        r"murder\s+victim",
         r"death",
-        r"died in the fire",
-        r"killed in the",
+        r"died\s+in\s+the",
+        r"killed\s+in\s+the",
+        r"killed\s+during",
+        r"fatally\s+wounded",
+        r"found\s+dead",
+        r"pronounced\s+dead",
+        r"life\s+was\s+taken",
+        r"was\s+slain",
+        r"perished",
+        r"died\s+from",
+        r"died\s+at\s+the",
+        r"died\s+of",
+        r"suspicious\s+death",
+        r"cause\s+of\s+death",
+        r"was\s+murdered",
+        r"homicide",
+        r"killed\s+her",
+        r"killed\s+him",
+        r"killed\s+them",
     ]
-    if len(name_parts) >= 2:
-        for i in range(len(name_parts)):
-            for j in range(i + 1, len(name_parts) + 1):
-                partial = " ".join(name_parts[i:j])
-                for death_term in death_patterns:
-                    idx = desc_lower.find(partial)
-                    if idx >= 0:
-                        window = desc_lower[max(0, idx - 80) : min(len(desc_lower), idx + 150)]
-                        if re.search(death_term, window, re.IGNORECASE):
-                            return True
-    else:
-        for death_term in death_patterns:
-            idx = desc_lower.find(death_term)
-            if idx >= 0:
-                window = desc_lower[max(0, idx - 30) : min(len(desc_lower), idx + len(witness_name) + 30)]
-                if witness_name.lower() in window:
-                    return True
+    # Split into sentences
+    sentences = re.split(r"(?<=[.!?])\s+", desc_lower)
+
+    # Check each sentence that contains the witness name
+    for i, s in enumerate(sentences):
+        if name_lower not in s:
+            continue
+        # Check this sentence
+        if any(re.search(dp, s) for dp in death_patterns):
+            return True
+        # Check previous sentence (death might be described in prior sentence)
+        if i > 0 and any(re.search(dp, sentences[i - 1]) for dp in death_patterns):
+            return True
+        # Check next sentence (death might be described in following sentence)
+        if i < len(sentences) - 1 and any(re.search(dp, sentences[i + 1]) for dp in death_patterns):
+            return True
+
     return False
 
 

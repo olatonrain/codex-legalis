@@ -11,7 +11,7 @@ from src.llm import get_llm, get_structured_llm
 from src.logger import get_logger
 from src.schemas import ExaminationObjection, ExpertQualRuling, JudgeRuling
 from src.state import TrialState
-from src.trial_phases import _clerk_compression, _get_jx, _strip_ruling_preamble
+from src.trial_phases import _clerk_compression, _get_jx, _is_deceased_witness, _strip_ruling_preamble
 
 logger = get_logger(__name__)
 
@@ -768,6 +768,22 @@ def witness_direct(state: TrialState) -> dict:
             "transcript": transcript,
             "declined_witnesses": declined_witnesses,
             **clerk_update,
+        }
+
+    # ── Deceased Witness Check ──────────────────────────────────
+    # If the case facts describe this witness as deceased, skip them.
+    if current_witness and _is_deceased_witness(current_witness, facts):
+        transcript.append(
+            AIMessage(content=f"[{current_witness} is deceased — cannot be called to testify]", name="System")
+        )
+        declined_witnesses.append(current_witness)
+        return {
+            "witness_queue": witness_queue,
+            "current_witness": None,
+            "examination_phase": None,
+            "witness_direct_qa": [],
+            "transcript": transcript,
+            "declined_witnesses": declined_witnesses,
         }
 
     pros_llm = get_llm(temperature=0.6, model=AGENT_MODELS["Prosecutor"])
