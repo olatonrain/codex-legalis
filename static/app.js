@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     UI.initCaseTabs();
     UI.initDemoButtons();
     UI.initNavActions();
-    UI.initBenchmarkButtons();
+
     initInsightButtons();
     UI.loadJurisdictions();
     renderMiniChart();
